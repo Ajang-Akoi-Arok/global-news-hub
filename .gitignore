@@ -1,0 +1,12 @@
+# Real API keys / local overrides — never commit these
+js/config.js
+.env
+
+.DS_Store
+node_modules/
+*.log
+
+# Python backend
+venv/
+__pycache__/
+*.pyc
