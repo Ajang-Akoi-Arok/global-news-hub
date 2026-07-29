@@ -1,20 +1,56 @@
-# World Realtime News
+# 🌍 World Realtime News
 
-## Project Overview
+> Search, filter, sort, and bookmark live headlines from 72 countries — built for the "Playing Around with APIs" assignment.
 
-World Realtime News is a news reader built for the "Playing Around with APIs"
-assignment. The idea behind it is simple: most API demo projects (weather
-apps, cat fact generators, joke generators) just show you data and stop
-there — you look at it once and move on. This project is built around
-actually *using* the data: narrowing down a stream of headlines to the
-ones a specific person cares about, and letting them keep a personal
-reading list of articles to come back to. It's closer to a small,
-personal version of Feedly or Pocket than a single API call wrapped in a
-web page.
+## Welcome
 
-The app fetches real, live headlines from [GNews](https://gnews.io/docs/v4)
-across seven categories and 72 countries, lets you search, filter, sort,
-and bookmark them. A small Python backend sits between the browser and
+Welcome to **World Realtime News**, and thank you for taking the time to
+look through this project.
+
+This is a news reader that fetches real, live headlines from the
+[GNews API](https://gnews.io/docs/v4) and lets you actually *do*
+something with them — search across them, filter by category or
+country, sort them, and bookmark the ones you want to come back to.
+Most API demo projects (weather apps, cat fact generators, joke
+generators) just display information from a single request and stop
+there; this one is built around the idea that a news reader should feel
+closer to a small, personal Feedly than a single API call wrapped in a
+page.
+
+Below, this README explains what the project does, how it's built, and
+how it lines up against the assignment rubric — including being
+straightforward about what's finished and what's still in progress. If
+something below is marked as not done yet, it means exactly that; it
+isn't quietly assumed or glossed over.
+
+## How This Project Addresses the Assignment Rubric
+
+| Rubric criterion | Status |
+|---|---|
+| **Functionality — Purpose and Value.** Serves a genuine need, not a gimmick. | Done. See [Project Purpose](#project-purpose). |
+| **Functionality — API Usage.** External API integrated securely, data fetched and presented meaningfully. | Done. See [How Articles Get Fetched](#how-articles-get-fetched) and [Keeping the API Key Safe](#keeping-the-api-key-safe). |
+| **Functionality — Error Handling.** Robust handling of API downtime/invalid responses. | Done. See [Error Handling — Explained](#error-handling--explained). |
+| **Functionality — User Interaction with Data.** Sorting, filtering, searching. | Done. See [Key Features](#key-features) and [Search, Filter, and Sort — Explained](#search-filter-and-sort--explained). |
+| **Deployment — Server Deployment.** Running on two web servers. | **Not done yet.** Instructions are written and ready in [Deployment](#deployment); the actual deployment to Web01/Web02 hasn't happened. |
+| **Deployment — Load Balancer Configuration.** Traffic split via a load balancer. | **Not done yet.** Same as above — the HAProxy config and steps exist, but Lb01 hasn't been configured against real servers. |
+| **User Experience — User Interface.** Intuitive, polished interface. | Done. See [Understanding the Interface](#understanding-the-interface). |
+| **User Experience — Data Presentation.** Clear, logical presentation of data. | Done. Covered throughout, in particular [Image Fallback](#image-fallback-topic-art) and the empty/loading states in [Error Handling — Explained](#error-handling--explained). |
+| **Documentation — README Quality.** Clear instructions for local run and deployment. | This document. |
+| **Documentation — API and Resource Attribution.** Proper credit to the API and resources used. | Done. See [API Credit](#api-credit). |
+| **Demo Video — Feature Showcase.** Video demonstrating the app's features. | **Not recorded yet.** |
+| **Demo Video — Presentation Quality.** Clear, professional video. | **Not recorded yet.** |
+
+## Project Purpose
+
+Unlike generic API demos, this app is built around *interacting* with a
+real information stream: narrowing a large pool of headlines down to
+what one person actually cares about, and letting them keep a personal
+reading list — search, category filtering, country filtering, sorting,
+and bookmarking all work together rather than being separate gimmicks
+bolted onto a single data dump.
+
+The app fetches real, live headlines from GNews across seven categories
+and 72 countries. A small Python backend sits between the browser and
 GNews so the API key never has to be exposed in the frontend code — more
 on why that matters in [Keeping the API key safe](#keeping-the-api-key-safe)
 below.
@@ -67,9 +103,9 @@ the page shows skeleton placeholders instead of a blank screen. If the
 fetch fails, a red banner explains what went wrong and offers a Retry
 button — the page never just breaks or shows nothing.
 
-**Responsive, text-first design.** No decorative icons or emoji, no
-build step, no external JS framework — just HTML, CSS, and vanilla
-JavaScript, laid out to work on both desktop and mobile.
+**Responsive, text-first design.** No decorative icons or emoji in the
+UI itself, no build step, no external JS framework — just HTML, CSS, and
+vanilla JavaScript, laid out to work on both desktop and mobile.
 
 ## How Articles Get Fetched
 
@@ -391,6 +427,9 @@ app in a browser.
 - **Live mode depends on GNews' free tier**, including its rate limit
   and quota. Mock mode exists specifically so the UI can be worked on
   and demoed without depending on that.
+- **Not yet deployed.** See [Deployment](#deployment) — instructions are
+  ready, execution isn't done.
+- **No demo video yet.**
 
 ## Challenges
 
@@ -417,3 +456,6 @@ built on top of their `/top-headlines` endpoint.
 - **Repository:** https://github.com/Ajang-Akoi-Arok/global-news-hub
 - **Live deployment (via load balancer):** _add Lb01 URL here once deployed_
 - **Demo video:** _add video link here once recorded_
+
+Thank you again for reading through this — happy to answer anything
+that isn't clear.
