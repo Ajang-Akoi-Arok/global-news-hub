@@ -21,6 +21,8 @@ function toggleBookmark(id) {
 
 const LATEST_CARDS_COUNT = 4;
 const HERO_CAROUSEL_COUNT = 3;
+const INITIAL_VISIBLE = 6;
+const LOAD_MORE_STEP = 6;
 
 // --- State ---
 let allArticles = [];
@@ -31,6 +33,11 @@ let activeView = "all";
 let activeCountry = "";
 let sortMode = "newest";
 let searchTerm = "";
+let visibleCount = INITIAL_VISIBLE;
+
+function resetVisibleCount() {
+  visibleCount = INITIAL_VISIBLE;
+}
 
 // --- DOM refs ---
 const grid = document.getElementById("article-grid");
@@ -44,6 +51,7 @@ const heroSkeleton = document.getElementById("hero-skeleton");
 const heroCarouselTrack = document.getElementById("hero-carousel-track");
 const latestCardsGrid = document.getElementById("latest-cards-grid");
 const latestCardsSkeleton = document.getElementById("latest-cards-skeleton");
+const loadMoreBtn = document.getElementById("load-more-btn");
 
 function formatDate(iso) {
   const d = new Date(iso);
@@ -254,11 +262,14 @@ function renderArticles(list, bookmarks) {
   if (list.length === 0) {
     grid.innerHTML = "";
     emptyState.classList.remove("hidden");
+    loadMoreBtn.classList.add("hidden");
     return;
   }
   emptyState.classList.add("hidden");
 
-  grid.innerHTML = list
+  const visible = list.slice(0, visibleCount);
+
+  grid.innerHTML = visible
     .map((a) => {
       const isSaved = bookmarks.has(a.id);
       return `
@@ -290,6 +301,14 @@ function renderArticles(list, bookmarks) {
       applyFiltersAndRender();
     });
   });
+
+  const remaining = list.length - visible.length;
+  if (remaining > 0) {
+    loadMoreBtn.textContent = `Load more (${remaining} remaining)`;
+    loadMoreBtn.classList.remove("hidden");
+  } else {
+    loadMoreBtn.classList.add("hidden");
+  }
 }
 
 function escapeHtml(str) {
@@ -299,6 +318,7 @@ function escapeHtml(str) {
 }
 
 async function loadArticles(forceError = false) {
+  resetVisibleCount();
   errorBanner.classList.add("hidden");
   grid.classList.add("hidden");
   loadingGrid.classList.remove("hidden");
@@ -381,11 +401,13 @@ document.getElementById("see-all-link").addEventListener("click", (e) => {
 
 document.getElementById("search-input").addEventListener("input", (e) => {
   searchTerm = e.target.value;
+  resetVisibleCount();
   applyFiltersAndRender();
 });
 
 document.getElementById("sort-select").addEventListener("change", (e) => {
   sortMode = e.target.value;
+  resetVisibleCount();
   applyFiltersAndRender();
 });
 
@@ -402,6 +424,7 @@ document.querySelectorAll(".chip").forEach((chip) => {
     document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
     chip.classList.add("active");
     activeCategory = chip.dataset.category;
+    resetVisibleCount();
     applyFiltersAndRender();
   });
 });
@@ -411,8 +434,27 @@ document.querySelectorAll(".view-tab").forEach((tab) => {
     document.querySelectorAll(".view-tab").forEach((t) => t.classList.remove("active"));
     tab.classList.add("active");
     activeView = tab.dataset.view;
+    resetVisibleCount();
     applyFiltersAndRender();
   });
+});
+
+loadMoreBtn.addEventListener("click", () => {
+  visibleCount += LOAD_MORE_STEP;
+  applyFiltersAndRender();
+});
+
+document.getElementById("clear-filters-btn").addEventListener("click", () => {
+  searchTerm = "";
+  document.getElementById("search-input").value = "";
+  activeCategory = "all";
+  document.querySelectorAll(".chip").forEach((c) => c.classList.remove("active"));
+  document.querySelector('.chip[data-category="all"]').classList.add("active");
+  activeView = "all";
+  document.querySelectorAll(".view-tab").forEach((t) => t.classList.remove("active"));
+  document.querySelector('.view-tab[data-view="all"]').classList.add("active");
+  resetVisibleCount();
+  applyFiltersAndRender();
 });
 
 document.getElementById("retry-btn").addEventListener("click", () => loadArticles(false));

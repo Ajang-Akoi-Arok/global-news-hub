@@ -43,6 +43,19 @@ triggers a fresh fetch instead of an instant re-render. See
 [Search, filter, and sort — explained](#search-filter-and-sort--explained)
 for how this interacts with the rest of the filters.
 
+**Load more instead of dumping everything at once.** The article list
+below the hero and Latest Articles sections starts with just 6 articles
+and a **Load more** button showing how many more match your current
+filters. Clicking it reveals 6 more at a time. Changing any filter
+(search, category, sort, saved view) resets it back to 6, so you're
+never scrolling through a huge list that doesn't match what you just
+filtered for.
+
+**A helpful empty state.** If nothing matches your filters, instead of
+just an empty page it shows "No news found. Try another keyword." and a
+**Clear Filters** button that resets search, category, and the saved-view
+toggle back to their defaults in one click.
+
 **Sorting.** Four sort modes: newest first, oldest first, source
 alphabetically, and title alphabetically. This applies to the main list
 further down the page — the hero carousel and the "Latest Articles" row
@@ -380,8 +393,9 @@ app in a browser.
 | GNews rate limit hit (429/403) | Error banner shown with a Retry button; no crash, no blank page |
 | Article has no image | Category-specific SVG illustration shown instead |
 | Image URL is broken or fails to load | Same SVG illustration swapped in automatically |
-| Search term matches nothing | "No articles found" empty state shown instead of a blank grid |
+| Search term matches nothing | "No news found" empty state with a Clear Filters button, instead of a blank grid |
 | "Saved" tab with zero bookmarks | Same empty state, so it's clear the list isn't broken, just empty |
+| More than 6 articles match the current filters | Only 6 show at first, with a Load more button for the rest |
 | Category filter + search combined | Both apply together — results match the category *and* the search term |
 | GNews key missing from `.env` | Backend returns a clear 500 error instead of crashing |
 | Unsupported country code requested | Backend rejects it with a 400 before making any request to GNews |

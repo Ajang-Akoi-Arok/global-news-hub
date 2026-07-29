@@ -640,6 +640,24 @@ input:focus, select:focus, button:focus {
   color: var(--text-dim);
 }
 
+.empty-title {
+  font-family: var(--font-serif);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 6px;
+}
+
+.empty-hint {
+  font-size: 14px;
+  margin: 0 0 18px;
+}
+
+.load-more-btn {
+  display: block;
+  margin: 8px auto 32px;
+}
+
 .skeleton-thumb {
   background: linear-gradient(90deg, var(--surface-2) 25%, #e6e8ec 37%, var(--surface-2) 63%);
   background-size: 400% 100%;

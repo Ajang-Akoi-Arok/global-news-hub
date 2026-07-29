@@ -161,8 +161,12 @@
     <div id="loading-grid" class="article-list hidden"></div>
     <div id="article-grid" class="article-list"></div>
 
+    <button class="btn btn-ghost load-more-btn hidden" id="load-more-btn" type="button">Load more</button>
+
     <div class="empty-state hidden" id="empty-state">
-      <p>No articles match your filters.</p>
+      <p class="empty-title">No news found.</p>
+      <p class="empty-hint">Try another keyword.</p>
+      <button class="btn btn-ghost" id="clear-filters-btn" type="button">Clear Filters</button>
     </div>
 
     <footer class="site-footer">
