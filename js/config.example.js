@@ -1,5 +1,5 @@
 /*
- * Copy this file to js/config.js (already gitignored). The real GNews key
+ * Copy this file to js/config.js (already gitignored). The real API key
  * lives server-side in .env (see .env.example / server/app.py) — this file
  * only controls whether the frontend uses mock or live data.
  */

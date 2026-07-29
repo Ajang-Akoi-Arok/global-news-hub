@@ -4,9 +4,9 @@
  * the data came from mock data or a real HTTP request.
  *
  * Live source: the app's own Flask backend at /api/articles (see
- * server/app.py), which calls GNews (https://gnews.io/docs/v4) server-side
- * across all seven categories and returns them pre-merged in the same
- * shape mockData.js uses. The GNews API key never reaches the browser.
+ * server/app.py), which calls NewsData.io (https://newsdata.io/documentation)
+ * server-side across all seven categories and returns them pre-merged in
+ * the same shape mockData.js uses. The API key never reaches the browser.
  */
 
 function simulateNetworkDelay(ms = 600) {

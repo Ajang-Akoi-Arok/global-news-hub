@@ -1,6 +1,6 @@
 /*
  * Placeholder article data shaped like a typical news API response
- * (NewsAPI.org / GNews style: source, title, description, url, publishedAt).
+ * (NewsData.io style: source, title, description, url, publishedAt).
  * Swapping js/newsApi.js to call a real endpoint later requires no changes
  * to app.js, since it already consumes fetchArticles() as a promise.
  */

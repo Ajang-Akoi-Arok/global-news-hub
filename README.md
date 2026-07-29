@@ -1,59 +1,23 @@
-# 🌍 World Realtime News
+# World Realtime News
 
-> Search, filter, sort, and bookmark live headlines from 72 countries — built for the "Playing Around with APIs" assignment.
+## Project Overview
 
-## Welcome
+World Realtime News is a news reader built for the "Playing Around with APIs"
+assignment. The idea behind it is simple: most API demo projects (weather
+apps, cat fact generators, joke generators) just show you data and stop
+there — you look at it once and move on. This project is built around
+actually *using* the data: narrowing down a stream of headlines to the
+ones a specific person cares about, and letting them keep a personal
+reading list of articles to come back to. It's closer to a small,
+personal version of Feedly or Pocket than a single API call wrapped in a
+web page.
 
-Welcome to **World Realtime News**, and thank you for taking the time to
-look through this project.
-
-This is a news reader that fetches real, live headlines from the
-[GNews API](https://gnews.io/docs/v4) and lets you actually *do*
-something with them — search across them, filter by category or
-country, sort them, and bookmark the ones you want to come back to.
-Most API demo projects (weather apps, cat fact generators, joke
-generators) just display information from a single request and stop
-there; this one is built around the idea that a news reader should feel
-closer to a small, personal Feedly than a single API call wrapped in a
-page.
-
-Below, this README explains what the project does, how it's built, and
-how it lines up against the assignment rubric — including being
-straightforward about what's finished and what's still in progress. If
-something below is marked as not done yet, it means exactly that; it
-isn't quietly assumed or glossed over.
-
-## How This Project Addresses the Assignment Rubric
-
-| Rubric criterion | Status |
-|---|---|
-| **Functionality — Purpose and Value.** Serves a genuine need, not a gimmick. | Done. See [Project Purpose](#project-purpose). |
-| **Functionality — API Usage.** External API integrated securely, data fetched and presented meaningfully. | Done. See [How Articles Get Fetched](#how-articles-get-fetched) and [Keeping the API Key Safe](#keeping-the-api-key-safe). |
-| **Functionality — Error Handling.** Robust handling of API downtime/invalid responses. | Done. See [Error Handling — Explained](#error-handling--explained). |
-| **Functionality — User Interaction with Data.** Sorting, filtering, searching. | Done. See [Key Features](#key-features) and [Search, Filter, and Sort — Explained](#search-filter-and-sort--explained). |
-| **Deployment — Server Deployment.** Running on two web servers. | **Not done yet.** Instructions are written and ready in [Deployment](#deployment); the actual deployment to Web01/Web02 hasn't happened. |
-| **Deployment — Load Balancer Configuration.** Traffic split via a load balancer. | **Not done yet.** Same as above — the HAProxy config and steps exist, but Lb01 hasn't been configured against real servers. |
-| **User Experience — User Interface.** Intuitive, polished interface. | Done. See [Understanding the Interface](#understanding-the-interface). |
-| **User Experience — Data Presentation.** Clear, logical presentation of data. | Done. Covered throughout, in particular [Image Fallback](#image-fallback-topic-art) and the empty/loading states in [Error Handling — Explained](#error-handling--explained). |
-| **Documentation — README Quality.** Clear instructions for local run and deployment. | This document. |
-| **Documentation — API and Resource Attribution.** Proper credit to the API and resources used. | Done. See [API Credit](#api-credit). |
-| **Demo Video — Feature Showcase.** Video demonstrating the app's features. | **Not recorded yet.** |
-| **Demo Video — Presentation Quality.** Clear, professional video. | **Not recorded yet.** |
-
-## Project Purpose
-
-Unlike generic API demos, this app is built around *interacting* with a
-real information stream: narrowing a large pool of headlines down to
-what one person actually cares about, and letting them keep a personal
-reading list — search, category filtering, country filtering, sorting,
-and bookmarking all work together rather than being separate gimmicks
-bolted onto a single data dump.
-
-The app fetches real, live headlines from GNews across seven categories
-and 72 countries. A small Python backend sits between the browser and
-GNews so the API key never has to be exposed in the frontend code — more
-on why that matters in [Keeping the API key safe](#keeping-the-api-key-safe)
-below.
+The app fetches real, live headlines from [NewsData.io](https://newsdata.io/documentation)
+across seven categories and over 240 countries, lets you search, filter,
+sort, and bookmark them. A small Python backend sits between the browser
+and NewsData.io so the API key never has to be exposed in the frontend
+code — more on why that matters in
+[Keeping the API key safe](#keeping-the-api-key-safe) below.
 
 ## Key Features
 
@@ -70,12 +34,13 @@ Sports, Health, Science, Entertainment — shown as clickable chips along
 the top of the article list. Clicking one narrows the list down to just
 that category; clicking "All" clears the filter.
 
-**Country filter.** A dropdown covering every country GNews's
-top-headlines endpoint supports (72 of them, from Argentina to
-Zimbabwe). Unlike the category chips, this one isn't free — GNews only
-returns headlines for one country per request, so there's no way to
-filter client-side across countries you haven't fetched yet. Changing it
-triggers a fresh fetch instead of an instant re-render.
+**Country filter.** A dropdown covering every country NewsData.io's
+`/latest` endpoint supports — over 240 of them, essentially the full
+ISO 3166-1 country list. Unlike the category chips, this one isn't free
+— NewsData.io only returns headlines for the country (or countries) you
+ask for, so there's no way to filter client-side across countries you
+haven't fetched yet. Changing it triggers a fresh fetch instead of an
+instant re-render.
 
 **Sorting.** Four sort modes: newest first, oldest first, source
 alphabetically, and title alphabetically. This applies to the main list
@@ -103,41 +68,43 @@ the page shows skeleton placeholders instead of a blank screen. If the
 fetch fails, a red banner explains what went wrong and offers a Retry
 button — the page never just breaks or shows nothing.
 
-**Responsive, text-first design.** No decorative icons or emoji in the
-UI itself, no build step, no external JS framework — just HTML, CSS, and
-vanilla JavaScript, laid out to work on both desktop and mobile.
+**Responsive, text-first design.** No decorative icons or emoji, no
+build step, no external JS framework — just HTML, CSS, and vanilla
+JavaScript, laid out to work on both desktop and mobile.
 
 ## How Articles Get Fetched
 
-The frontend never talks to GNews directly. Instead, `js/newsApi.js`
+The frontend never talks to NewsData.io directly. Instead, `js/newsApi.js`
 exposes one function, `fetchArticles()`, that the rest of the app calls
 without needing to know where the data actually comes from. Depending on
 `js/config.js`, that function either:
 
 - returns the placeholder data in `js/mockData.js` immediately (useful
   for looking at the UI without needing an API key, or as a fallback if
-  GNews' rate limit gets hit while demoing), or
+  the daily API quota gets used up while demoing), or
 - calls the app's own backend at `/api/articles`, which is where the
-  real GNews request happens.
+  real NewsData.io request happens.
 
 On the backend side, `server/app.py` loops through all seven categories
-one at a time, asking GNews for up to 4 headlines from each — that's up
-to 28 articles per page load. It waits about a third of a second between
-each category request, because GNews' free tier returns a `429 Too Many
-Requests` error if you send several requests back-to-back too quickly.
+one at a time, asking NewsData.io's `/latest` endpoint for up to 4
+headlines from each — that's up to 28 articles per page load, and one
+request per category (7 total). NewsData.io's free tier gives 200
+requests ("credits") a day rather than a tight per-second burst limit,
+so a small delay between requests is kept mainly as a safety margin
+rather than a hard requirement.
 
 If a country was selected in the dropdown, that gets added to every one
-of those seven requests as GNews' own `country` parameter — so "up to 28
-articles" becomes "up to 28 articles from that country" instead. The
-backend checks the country code against GNews' real list of 72 supported
-countries before making any request; an unsupported code gets rejected
-immediately with a `400` rather than silently sending a request GNews
-would just ignore.
+of those seven requests as NewsData.io's own `country` parameter — so
+"up to 28 articles" becomes "up to 28 articles from that country"
+instead. The backend checks the country code against NewsData.io's real
+list of supported countries (scraped from their documentation) before
+making any request; an unsupported code gets rejected immediately with a
+`400` rather than sending a request that would just come back empty.
 
 Once all seven categories have responded, the backend merges everything
 into a single list, gives each article a sequential id, and sends it
-back to the browser as JSON. Every article — whether it came from GNews
-or from the mock data file — has the same shape:
+back to the browser as JSON. Every article — whether it came from
+NewsData.io or from the mock data file — has the same shape:
 
 ```json
 {
@@ -164,10 +131,10 @@ vice versa.
 
 The country dropdown is the odd one out. Category/search/sort all work
 by filtering the articles already sitting in the browser, so they update
-instantly. Country can't work that way — GNews only gives you headlines
-for one country at a time, so there's nothing to filter locally until
-you've actually asked for that country's data. Changing the dropdown
-re-runs the whole fetch (through the same loading-skeleton flow as the
+instantly. Country can't work that way — NewsData.io only gives you
+headlines for the country you ask for, so there's nothing to filter
+locally until you've actually asked for that country's data. Changing
+the dropdown re-runs the whole fetch (through the same loading-skeleton flow as the
 initial page load) for the new country, and your category/search/sort
 choices stay applied to whatever comes back.
 
@@ -183,8 +150,8 @@ different browser will start you with an empty bookmark list.
 One honest limitation worth knowing about: article ids are assigned
 fresh by the backend every time `/api/articles` is called (id `1` is
 just "the first article in this response," not a permanent identifier
-tied to that specific news story). In practice GNews' top headlines
-don't change every few minutes, so ids tend to stay consistent between
+tied to that specific news story). In practice NewsData.io's top
+headlines don't change every few minutes, so ids tend to stay consistent between
 reloads in a normal browsing session — but if the underlying headlines
 shift, a bookmark could end up pointing at a different article than the
 one you originally saved.
@@ -198,7 +165,7 @@ them differently:
 place of the hero carousel, the latest-articles cards, and the article
 list — so the layout doesn't jump around once real content arrives.
 
-**If the fetch fails** — GNews is down, the rate limit gets hit, the key
+**If the fetch fails** — NewsData.io is down, the daily quota is used up, the key
 is missing or invalid, or the backend can't be reached at all — the
 skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
@@ -211,7 +178,7 @@ real rate-limit hit.
 
 ## Image Fallback (Topic Art)
 
-Not every article GNews returns has a usable image — some are missing
+Not every article NewsData.io returns has a usable image — some are missing
 one entirely, and occasionally an image URL is broken or slow to load.
 Rather than showing a broken-image icon, `js/topicArt.js` provides a
 small, flat SVG illustration for each of the seven categories. If an
@@ -223,13 +190,13 @@ swaps it out for the same illustration after the fact.
 
 This is the reason the project has a backend at all. If this were a
 purely static site — just HTML, CSS, and JavaScript with no server —
-there would be nowhere to hide the GNews API key. Anything written into
-a `.js` file is visible to anyone who opens their browser's dev tools or
-views the page source, so the key would effectively be public the
-moment the site went live.
+there would be nowhere to hide the NewsData.io API key. Anything written
+into a `.js` file is visible to anyone who opens their browser's dev
+tools or views the page source, so the key would effectively be public
+the moment the site went live.
 
 `server/app.py` solves this by being the only thing that ever talks to
-GNews directly. The key is read from a `.env` file on the server (via
+NewsData.io directly. The key is read from a `.env` file on the server (via
 `python-dotenv`) and is never sent to the browser in any form. `.env` is
 listed in `.gitignore` so it can never end up committed to the
 repository by accident; `.env.example` is checked in instead, as a
@@ -250,7 +217,7 @@ global-news-hub_digitalaxis/
 │   ├── config.example.js    # Template for config.js
 │   └── config.js             # Gitignored — your local copy, toggles mock vs. live data
 ├── server/
-│   └── app.py                 # Flask backend — serves the frontend and calls GNews securely
+│   └── app.py                 # Flask backend — serves the frontend and calls NewsData.io securely
 ├── requirements.txt          # Python packages needed to run the backend
 ├── .env.example               # Template showing what goes in .env (never the real key)
 ├── .gitignore
@@ -263,10 +230,11 @@ global-news-hub_digitalaxis/
 
 - **Python 3.9+** for the backend.
 - The four packages listed in `requirements.txt` — Flask (the web
-  framework), requests (for calling GNews), python-dotenv (for reading
-  `.env`), and gunicorn (a production-ready server, used when deployed).
-- A free [GNews](https://gnews.io/) API key, if you want live data
-  instead of the built-in mock data.
+  framework), requests (for calling NewsData.io), python-dotenv (for
+  reading `.env`), and gunicorn (a production-ready server, used when
+  deployed).
+- A free [NewsData.io](https://newsdata.io/) API key, if you want live
+  data instead of the built-in mock data.
 - Any modern browser with JavaScript enabled. No build tools, no
   Node.js, no package manager needed on the frontend side.
 
@@ -278,7 +246,7 @@ global-news-hub_digitalaxis/
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # then paste your GNews key into NEWS_API_KEY
+cp .env.example .env        # then paste your NewsData.io key into NEWS_API_KEY
 python server/app.py
 # open http://localhost:5050
 ```
@@ -289,7 +257,7 @@ up-to-date headlines.
 
 ### Without a backend (mock data only)
 
-If you just want to look at the interface without setting up a GNews key
+If you just want to look at the interface without setting up a NewsData.io key
 or a Python environment, open `js/config.js` and set `USE_MOCK_DATA:
 true`. Then either open `index.html` directly in a browser (via
 `file://`), or serve the folder with:
@@ -404,58 +372,53 @@ app in a browser.
 
 | Case | What happens |
 |---|---|
-| GNews rate limit hit (429/403) | Error banner shown with a Retry button; no crash, no blank page |
+| Daily API quota exhausted / rate limit hit | Error banner shown with a Retry button; no crash, no blank page |
 | Article has no image | Category-specific SVG illustration shown instead |
 | Image URL is broken or fails to load | Same SVG illustration swapped in automatically |
 | Search term matches nothing | "No news found" empty state with a Clear Filters button |
 | "Saved" tab with zero bookmarks | Same empty state, so it's clear the list isn't broken, just empty |
 | More than 6 articles match the current filters | Only 6 show at first, with a Load more button for the rest |
 | Category filter + search combined | Both apply together — results match the category *and* the search term |
-| GNews key missing from `.env` | Backend returns a clear 500 error instead of crashing |
-| Unsupported country code requested | Backend rejects it with a 400 before making any request to GNews |
+| API key missing from `.env` | Backend returns a clear 500 error instead of crashing |
+| Unsupported country code requested | Backend rejects it with a 400 before making any request to NewsData.io |
 | Same article appearing in hero and latest cards | Filtered out of the main list below so it's never shown twice |
 
 ## Known Limitations
 
 - **Bookmarks use article ids, not URLs.** As explained above, ids are
   reassigned on every fetch, so a bookmark can technically drift to a
-  different article if GNews' top headlines shift between visits.
+  different article if NewsData.io's top headlines shift between visits.
 - **Bookmarks are per-browser.** There's no account system, so they
   don't sync across devices or browsers.
 - **No authentication.** Not required by the assignment rubric (it's
   listed only as an optional bonus task), so it isn't implemented.
-- **Live mode depends on GNews' free tier**, including its rate limit
-  and quota. Mock mode exists specifically so the UI can be worked on
-  and demoed without depending on that.
-- **Not yet deployed.** See [Deployment](#deployment) — instructions are
-  ready, execution isn't done.
-- **No demo video yet.**
+- **Live mode depends on NewsData.io's free tier**, including its 200
+  requests/day quota. Mock mode exists specifically so the UI can be
+  worked on and demoed without depending on that.
 
 ## Challenges
 
-The main one was GNews's free-tier rate limit — firing off requests for
-all seven categories at once got 429s back almost immediately. Fixed by
-spacing the requests out server-side (`REQUEST_GAP_SECONDS` in
-`server/app.py`) instead of sending them in parallel, which costs a
-couple of seconds of load time but stays under the limit.
+The main one was working within NewsData.io's free-tier budget — 200
+requests ("credits") per day, and every page load costs 7 of them (one
+per category). That's roughly 28 full page loads per day before the
+quota resets, which is tight enough that mock mode (`USE_MOCK_DATA:
+true`) exists specifically so the UI can be built, tested, and demoed
+without burning through it.
 
 The other was that a purely static site can't keep an API key secret —
 anything in the JS is visible in view-source. That's the reason for the
 Flask backend: the frontend calls `/api/articles` on the same origin,
-and the real GNews key only ever lives server-side in `.env`.
+and the real NewsData.io key only ever lives server-side in `.env`.
 
 ## API Credit
 
-Live headlines come from [GNews](https://gnews.io/docs/v4) — a free,
-well-documented REST API. All article text, images, and source names
-shown in the app are theirs; this project is just a reader/filter layer
-built on top of their `/top-headlines` endpoint.
+Live headlines come from [NewsData.io](https://newsdata.io/documentation)
+— a free, well-documented REST API. All article text, images, and source
+names shown in the app are theirs; this project is just a reader/filter
+layer built on top of their `/latest` endpoint.
 
 ## Links
 
 - **Repository:** https://github.com/Ajang-Akoi-Arok/global-news-hub
 - **Live deployment (via load balancer):** _add Lb01 URL here once deployed_
 - **Demo video:** _add video link here once recorded_
-
-Thank you again for reading through this — happy to answer anything
-that isn't clear.
