@@ -1,30 +1,4 @@
-const SESSION_KEY = "gnh_current_user";
-
-// Signing in is optional — anyone can browse and bookmark as a guest.
-// Signing in just scopes bookmarks to an account instead of this browser.
-const session = JSON.parse(localStorage.getItem(SESSION_KEY) || "null");
-
-const guestChip = document.getElementById("guest-chip");
-const accountChip = document.getElementById("account-chip");
-
-if (session) {
-  guestChip.classList.add("hidden");
-  accountChip.classList.remove("hidden");
-  document.getElementById("user-name").textContent = session.name || session.email;
-  document.getElementById("logout-btn").addEventListener("click", () => {
-    if (!confirm("Log out of Ajang News Hub?")) return;
-    localStorage.removeItem(SESSION_KEY);
-    window.location.reload();
-  });
-}
-
-const BOOKMARKS_KEY = session ? `gnh_bookmarks_${session.email}` : "gnh_bookmarks_guest";
-
-// Guests aren't tied to an account, so their saves are only good for this
-// page load — every fresh visit (including a plain refresh) starts clean.
-if (!session) {
-  localStorage.removeItem(BOOKMARKS_KEY);
-}
+const BOOKMARKS_KEY = "gnh_bookmarks";
 
 function getBookmarks() {
   try {
