@@ -1,5 +1,5 @@
 """
-Flask backend for Ajang News Hub.
+Flask backend for World Realtime News.
 
 Serves the static frontend (index.html, css/, js/) and one API endpoint,
 /api/articles, that fetches live headlines from GNews on the server side —

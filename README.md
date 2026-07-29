@@ -1,8 +1,8 @@
-# Ajang News Hub
+# World Realtime News
 
 ## Project Overview
 
-Ajang News Hub is a news reader built for the "Playing Around with APIs"
+World Realtime News is a news reader built for the "Playing Around with APIs"
 assignment. The idea behind it is simple: most API demo projects (weather
 apps, cat fact generators, joke generators) just show you data and stop
 there — you look at it once and move on. This project is built around
