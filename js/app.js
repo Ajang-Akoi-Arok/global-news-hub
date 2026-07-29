@@ -1,3 +1,13 @@
+const CATEGORY_LABELS = {
+  world: "World",
+  business: "Business",
+  technology: "Technology",
+  sports: "Sports",
+  health: "Health",
+  science: "Science",
+  entertainment: "Entertainment",
+};
+
 const BOOKMARKS_KEY = "gnh_bookmarks";
 
 function getBookmarks() {

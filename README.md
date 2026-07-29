@@ -76,14 +76,9 @@ JavaScript, laid out to work on both desktop and mobile.
 
 The frontend never talks to NewsData.io directly. Instead, `js/newsApi.js`
 exposes one function, `fetchArticles()`, that the rest of the app calls
-without needing to know where the data actually comes from. Depending on
-`js/config.js`, that function either:
-
-- returns the placeholder data in `js/mockData.js` immediately (useful
-  for looking at the UI without needing an API key, or as a fallback if
-  the daily API quota gets used up while demoing), or
-- calls the app's own backend at `/api/articles`, which is where the
-  real NewsData.io request happens.
+without needing to know where the data actually comes from — it calls
+the app's own backend at `/api/articles`, which is where the real
+NewsData.io request happens.
 
 On the backend side, `server/app.py` loops through all seven categories
 one at a time, asking NewsData.io's `/latest` endpoint for up to 4
@@ -103,8 +98,7 @@ making any request; an unsupported code gets rejected immediately with a
 
 Once all seven categories have responded, the backend merges everything
 into a single list, gives each article a sequential id, and sends it
-back to the browser as JSON. Every article — whether it came from
-NewsData.io or from the mock data file — has the same shape:
+back to the browser as JSON. Every article has the same shape:
 
 ```json
 {
@@ -211,11 +205,8 @@ global-news-hub_digitalaxis/
 │   └── styles.css           # All styling for the dashboard
 ├── js/
 │   ├── app.js                # Renders articles, handles search/filter/sort/bookmarks
-│   ├── newsApi.js            # fetchArticles() — the only place that decides mock vs. live
-│   ├── mockData.js           # Placeholder articles, shaped exactly like a real API response
-│   ├── topicArt.js           # SVG fallback art per category
-│   ├── config.example.js    # Template for config.js
-│   └── config.js             # Gitignored — your local copy, toggles mock vs. live data
+│   ├── newsApi.js            # fetchArticles() — calls the backend
+│   └── topicArt.js           # SVG fallback art per category
 ├── server/
 │   └── app.py                 # Flask backend — serves the frontend and calls NewsData.io securely
 ├── requirements.txt          # Python packages needed to run the backend
@@ -233,14 +224,12 @@ global-news-hub_digitalaxis/
   framework), requests (for calling NewsData.io), python-dotenv (for
   reading `.env`), and gunicorn (a production-ready server, used when
   deployed).
-- A free [NewsData.io](https://newsdata.io/) API key, if you want live
-  data instead of the built-in mock data.
+- A free [NewsData.io](https://newsdata.io/) API key — the app only runs
+  against live data, so this is required, not optional.
 - Any modern browser with JavaScript enabled. No build tools, no
   Node.js, no package manager needed on the frontend side.
 
 ## Running Locally
-
-### With live data (the real setup)
 
 ```bash
 python3 -m venv venv
@@ -252,23 +241,8 @@ python server/app.py
 ```
 
 This runs the actual Flask app, which serves both the HTML/CSS/JS *and*
-the `/api/articles` endpoint — this is the mode that shows real,
-up-to-date headlines.
-
-### Without a backend (mock data only)
-
-If you just want to look at the interface without setting up a NewsData.io key
-or a Python environment, open `js/config.js` and set `USE_MOCK_DATA:
-true`. Then either open `index.html` directly in a browser (via
-`file://`), or serve the folder with:
-
-```bash
-python3 -m http.server 8000
-```
-
-In this mode every feature works exactly the same — search, filter,
-sort, bookmarks, error simulation — just against the placeholder
-articles in `js/mockData.js` instead of real headlines.
+the `/api/articles` endpoint. There's no static-only or mock-data mode —
+the app always fetches real, live headlines through the backend.
 
 ## Understanding the Interface
 
@@ -392,18 +366,17 @@ app in a browser.
   don't sync across devices or browsers.
 - **No authentication.** Not required by the assignment rubric (it's
   listed only as an optional bonus task), so it isn't implemented.
-- **Live mode depends on NewsData.io's free tier**, including its 200
-  requests/day quota. Mock mode exists specifically so the UI can be
-  worked on and demoed without depending on that.
+- **Depends entirely on NewsData.io's free tier**, including its 200
+  requests/day quota — there's no mock-data mode to fall back on if the
+  quota runs out or the key stops working.
 
 ## Challenges
 
 The main one was working within NewsData.io's free-tier budget — 200
 requests ("credits") per day, and every page load costs 7 of them (one
 per category). That's roughly 28 full page loads per day before the
-quota resets, which is tight enough that mock mode (`USE_MOCK_DATA:
-true`) exists specifically so the UI can be built, tested, and demoed
-without burning through it.
+quota resets, so testing and demoing needs to be deliberate about how
+often the app gets reloaded.
 
 The other was that a purely static site can't keep an API key secret —
 anything in the JS is visible in view-source. That's the reason for the

@@ -1,5 +1,4 @@
-# Real API keys / local overrides — never commit these
-js/config.js
+# Real API key — never commit this
 .env
 
 .DS_Store
