@@ -1,16 +1,14 @@
 # Ajang News Hub
 
 A news reader: browse headlines across seven categories, search/filter/sort
-them, and bookmark the ones you want to come back to — no account required.
-Signing in is optional and only used to keep your bookmarks tied to an
-account instead of just the browser. Built for the "Playing Around with
-APIs" assignment.
+them, and bookmark the ones you want to come back to. Built for the
+"Playing Around with APIs" assignment.
 
-> **Status:** the app currently runs on realistic **mock data** (shaped
-> exactly like a real news API response) so the full UI — auth, search,
-> filtering, sorting, bookmarking, loading and error states — can be built
-> and demoed before any API key exists. Wiring in a real, live news API is
-> the next step; see [Enabling a real API](#enabling-a-real-news-api) below.
+> **Status:** wired up to live headlines from [GNews](https://gnews.io/docs/v4)
+> through a small Flask backend, so the API key never has to sit in browser
+> JS. Mock data is still in the repo and can be flipped on in `js/config.js`
+> if you want to poke at the UI without depending on GNews' free-tier rate
+> limit — see [How the live API works](#how-the-live-api-works) below.
 
 ## Why this app
 
@@ -24,14 +22,11 @@ page.
 ## Features
 
 - **Open by default** — the news feed is the landing page, no login wall.
-  **Sign in is optional** (see [Auth caveat](#auth-caveat)) and only scopes
-  bookmarks to an account instead of the current browser.
 - **Search** across title, description, and source.
 - **Category filters**: World, Business, Technology, Sports, Health,
   Science, Entertainment.
 - **Sort**: newest, oldest, source A–Z, title A–Z.
-- **Bookmarks** ("Saved" view) — work as a guest, or sign in to keep them
-  tied to an account.
+- **Bookmarks** ("Saved" view), stored in the browser.
 - **Loading skeletons** and a **simulated error + retry** flow, so error
   handling can be demoed without needing to actually take an API offline.
 - Clean, light, text-first UI — no decorative icons/emoji, fully responsive,
@@ -39,91 +34,107 @@ page.
 
 ## Tech stack
 
-Plain HTML, CSS, and JavaScript (no framework, no bundler) — deliberately
-simple so it can be copied straight onto a plain web server for Part Two
-with no build pipeline required.
+Frontend is plain HTML, CSS, and JavaScript — no framework, no bundler.
+The backend is a small Flask app that exists for one reason: keep the
+GNews API key server-side instead of shipping it to the browser.
 
 ## Project structure
 
 ```
 global-news-hub_digitalaxis/
-├── index.html          # News dashboard (entry point, no login required)
-├── signin.html           # Optional sign in / sign up page
+├── index.html             # News dashboard (entry point, no login required)
 ├── css/styles.css
 ├── js/
-│   ├── auth.js          # Client-side demo auth
-│   ├── mockData.js       # Placeholder articles, shaped like a real API response
-│   ├── newsApi.js        # Data access layer — fetchArticles(); swap in a real fetch() here later
-│   ├── app.js             # Dashboard rendering, search/filter/sort/bookmarks
-│   ├── config.example.js # Template — copy to config.js
-│   └── config.js          # Gitignored; not committed
+│   ├── mockData.js        # Placeholder articles, shaped like a real API response
+│   ├── newsApi.js         # Data access layer — fetchArticles()
+│   ├── app.js              # Dashboard rendering, search/filter/sort/bookmarks
+│   ├── topicArt.js         # Fallback illustration when an article has no image
+│   ├── config.example.js  # Template — copy to config.js
+│   └── config.js           # Gitignored; toggles mock vs. live data
+├── server/
+│   └── app.py               # Flask backend — serves the frontend + /api/articles
+├── requirements.txt        # flask, requests, gunicorn, python-dotenv
+├── .env.example             # Template for NEWS_API_KEY — copy to .env
 └── deploy/
-    ├── nginx-global-news-hub.conf
+    ├── nginx-global-news-hub.conf   # Serves static files, proxies /api/ to gunicorn
     └── haproxy.cfg
 ```
 
 ## Running locally
 
-No build step or dependencies. From the project root:
+### With live data (the real setup)
 
 ```bash
-python3 -m http.server 8000
-# then open http://localhost:8000
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # then paste your GNews key into NEWS_API_KEY
+python server/app.py
+# open http://localhost:5050
 ```
 
-(Opening `index.html` directly via `file://` also works, since everything
-is client-side.)
+Flask serves both the frontend and `/api/articles`, so this is the way to
+run the actual app rather than a plain static server.
 
-1. Browse, search, filter by category, sort, and bookmark an article — no
-   sign-in needed.
-2. Optionally click **Sign in** in the header to create an account or use
-   **"Continue with demo account"**; this only moves your bookmarks from
-   the guest bucket to that account.
-3. Try **Simulate error** to see the error/retry state.
+### Without a backend (mock data only)
 
-### Auth caveat
+If you just want to look at the UI without a GNews key, set
+`USE_MOCK_DATA: true` in `js/config.js` and either open `index.html`
+directly via `file://`, or serve it with `python3 -m http.server 8000` —
+no Flask needed for this mode.
 
-There is no backend or database yet — accounts are stored in the browser's
-`localStorage`, and "passwords" are only base64-obfuscated, not hashed. This
-is enough to demonstrate a real, optional sign-up → sign-in flow end to end,
-but it is **not** secure authentication and shouldn't be treated as a
-security feature. A real deployment would move this to a backend with
-proper password hashing (e.g. bcrypt) and server-side sessions.
+1. Browse, search, filter by category, sort, and bookmark an article.
+2. Try **Simulate error** to see the error/retry state.
 
-## Enabling a real news API
+## How the live API works
 
-The data layer is already isolated in `js/newsApi.js` so this is a small,
-contained change once an API is chosen (e.g.
-[NewsAPI.org](https://newsapi.org/docs) or
-[GNews](https://gnews.io/docs/v4)):
+`server/app.py` calls GNews's `/top-headlines` endpoint once per category
+(world, business, technology, sports, health, science, entertainment),
+with a short delay between each call — GNews's free tier throws 429s on
+bursts of simultaneous requests, so firing all seven at once doesn't work.
+The results get merged into one array, given sequential ids, and sent back
+as JSON.
 
-1. `cp js/config.example.js js/config.js` (already gitignored).
-2. Set `USE_MOCK_DATA: false` and paste the API key into `NEWS_API_KEY`.
-3. In `js/newsApi.js`, replace the commented-out example in the `else`
-   branch with a real `fetch()` call, mapping the response into the same
-   `{ id, category, source, title, description, url, publishedAt }` shape
-   `mockData.js` already uses — nothing in `app.js` needs to change.
-4. Credit the API provider here in the README once chosen.
+The frontend (`js/newsApi.js`) just calls `fetchArticles()` and doesn't
+know or care whether the data came from that endpoint or from
+`mockData.js` — same shape either way, so `app.js` never has to change.
 
-**Never commit `js/config.js`** — it's excluded via `.gitignore` specifically
-to keep the real key out of the repo.
+**Never commit `.env`** — it holds the real GNews key and is gitignored
+specifically to keep it out of the repo.
 
 ## Deployment (Part Two)
 
-This is a static site, so deployment is just: copy the files to each web
-server's document root and point nginx (or Apache) at it, then have the
-load balancer round-robin between the two.
+Each web server needs to run two things: the Flask backend (so
+`/api/articles` actually works) and nginx in front of it, serving the
+static frontend and proxying API calls through to Flask. The load
+balancer then just round-robins between the two servers.
 
 ### 1. Web01 and Web02
 
+Copy the code over and set the backend up the same way as local:
+
 ```bash
-# from your machine
 scp -r ./* user@web01:/var/www/global-news-hub/
-scp -r ./* user@web02:/var/www/global-news-hub/
+ssh user@web01
+cd /var/www/global-news-hub
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env        # paste in the real NEWS_API_KEY
 ```
 
-On each server, install the provided nginx config
-(`deploy/nginx-global-news-hub.conf`):
+Run it with gunicorn instead of Flask's dev server, bound to localhost
+only — nginx is what actually faces the internet:
+
+```bash
+venv/bin/gunicorn -w 2 -b 127.0.0.1:5050 server.app:app --daemon
+```
+
+(Worth wrapping that in a systemd service so it survives a reboot, but a
+plain `--daemon` is enough to get this working.)
+
+Then install the provided nginx config, which serves the static files and
+proxies `/api/` to the gunicorn process above:
 
 ```bash
 sudo cp deploy/nginx-global-news-hub.conf /etc/nginx/sites-available/global-news-hub.conf
@@ -131,9 +142,11 @@ sudo ln -s /etc/nginx/sites-available/global-news-hub.conf /etc/nginx/sites-enab
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Verify each server independently first: `curl http://<web01-ip>/` and
-`curl http://<web02-ip>/` should both return the dashboard's HTML, and
-`curl http://<web01-ip>/health` should return `ok`.
+Repeat on Web02. Verify each server independently before touching the load
+balancer: `curl http://<web01-ip>/` should return the dashboard's HTML,
+`curl http://<web01-ip>/health` should return `ok`, and
+`curl http://<web01-ip>/api/articles` should return real article JSON
+(not a 404).
 
 ### 2. Lb01 (HAProxy)
 
@@ -163,19 +176,26 @@ or watch the HAProxy stats page while refreshing the app in a browser.
 
 ## API credit
 
-*To be filled in once a live news API is integrated.* Planned candidates:
-[NewsAPI.org](https://newsapi.org/) or [GNews](https://gnews.io/) — both
-documented, free-tier options suitable for this assignment.
+Live headlines come from [GNews](https://gnews.io/docs/v4) — free tier,
+no cost, well-documented REST API. All article text, images, and source
+names shown above are theirs; this app is just a reader/filter layer on
+top of their `/top-headlines` endpoint.
 
 ## Challenges
 
-*To be filled in as development continues past the mock-data stage
-(e.g. any rate-limit or CORS issues hit once a real API is wired in).*
+The main one was GNews's free-tier rate limit — firing off requests for
+all seven categories at once got 429s back almost immediately. Fixed by
+spacing the requests out server-side (`REQUEST_GAP_SECONDS` in
+`server/app.py`) instead of sending them in parallel, which costs a couple
+of seconds of load time but stays under the limit.
+
+The other was that a purely static site can't keep an API key secret —
+anything in the JS is visible in view-source. That's the reason for the
+Flask backend: the frontend calls `/api/articles` on the same origin, and
+the real GNews key only ever lives server-side in `.env`.
 
 ## Links
 
-- **Repository:** _add GitHub URL here_
+- **Repository:** https://github.com/Ajang-Akoi-Arok/global-news-hub
 - **Live deployment (via load balancer):** _add Lb01 URL here_
 - **Demo video:** _add video link here_
-- **Demo credentials:** demo account — `demo@globalnewshub.app` /
-  `demo1234` (or use "Continue with demo account" / sign up your own)
