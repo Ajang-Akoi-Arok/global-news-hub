@@ -13,11 +13,11 @@ personal version of Feedly or Pocket than a single API call wrapped in a
 web page.
 
 The app fetches real, live headlines from [GNews](https://gnews.io/docs/v4)
-across seven categories, lets you search, filter, and sort them, and lets
-you bookmark the ones you want to keep. A small Python backend sits
-between the browser and GNews so the API key never has to be exposed in
-the frontend code — more on why that matters in
-[Keeping the API key safe](#keeping-the-api-key-safe) below.
+across seven categories and 72 countries, lets you search, filter, sort,
+and bookmark them. A small Python backend sits between the browser and
+GNews so the API key never has to be exposed in the frontend code — more
+on why that matters in [Keeping the API key safe](#keeping-the-api-key-safe)
+below.
 
 ## Key Features
 
@@ -39,22 +39,7 @@ top-headlines endpoint supports (72 of them, from Argentina to
 Zimbabwe). Unlike the category chips, this one isn't free — GNews only
 returns headlines for one country per request, so there's no way to
 filter client-side across countries you haven't fetched yet. Changing it
-triggers a fresh fetch instead of an instant re-render. See
-[Search, filter, and sort — explained](#search-filter-and-sort--explained)
-for how this interacts with the rest of the filters.
-
-**Load more instead of dumping everything at once.** The article list
-below the hero and Latest Articles sections starts with just 6 articles
-and a **Load more** button showing how many more match your current
-filters. Clicking it reveals 6 more at a time. Changing any filter
-(search, category, sort, saved view) resets it back to 6, so you're
-never scrolling through a huge list that doesn't match what you just
-filtered for.
-
-**A helpful empty state.** If nothing matches your filters, instead of
-just an empty page it shows "No news found. Try another keyword." and a
-**Clear Filters** button that resets search, category, and the saved-view
-toggle back to their defaults in one click.
+triggers a fresh fetch instead of an instant re-render.
 
 **Sorting.** Four sort modes: newest first, oldest first, source
 alphabetically, and title alphabetically. This applies to the main list
@@ -62,16 +47,25 @@ further down the page — the hero carousel and the "Latest Articles" row
 at the top always show the newest articles regardless of sort mode,
 since their whole purpose is to surface what's freshest.
 
+**Load more instead of dumping everything at once.** The article list
+below the hero and Latest Articles sections starts with just 6 articles
+and a **Load more** button showing how many more match your current
+filters. Clicking it reveals 6 more at a time. Changing any filter
+(search, category, sort, saved view) resets it back to 6.
+
+**A helpful empty state.** If nothing matches your filters, instead of
+just an empty page it shows "No news found. Try another keyword." and a
+**Clear Filters** button that resets search, category, and the saved-view
+toggle back to their defaults in one click.
+
 **Bookmarks.** Every article has a Save/Unsave button. Saved articles are
-remembered in the browser (see [Bookmarks — explained](#bookmarks--explained)
-for exactly how), and there's a "Saved" tab that filters the whole page
-down to just your bookmarked articles.
+remembered in the browser, and there's a "Saved" tab that filters the
+whole page down to just your bookmarked articles.
 
 **Loading states and error handling.** While articles are being fetched,
 the page shows skeleton placeholders instead of a blank screen. If the
 fetch fails, a red banner explains what went wrong and offers a Retry
-button — the page never just breaks or shows nothing. See
-[Error handling — explained](#error-handling--explained) for the details.
+button — the page never just breaks or shows nothing.
 
 **Responsive, text-first design.** No decorative icons or emoji, no
 build step, no external JS framework — just HTML, CSS, and vanilla
@@ -95,8 +89,6 @@ one at a time, asking GNews for up to 4 headlines from each — that's up
 to 28 articles per page load. It waits about a third of a second between
 each category request, because GNews' free tier returns a `429 Too Many
 Requests` error if you send several requests back-to-back too quickly.
-Spacing them out costs a couple of extra seconds of load time, but keeps
-every request under the limit.
 
 If a country was selected in the dropdown, that gets added to every one
 of those seven requests as GNews' own `country` parameter — so "up to 28
@@ -124,10 +116,6 @@ or from the mock data file — has the same shape:
 }
 ```
 
-Because both data sources use the exact same shape, `js/app.js` — the
-part of the app that actually renders articles onto the page — never
-needs to know or care which one it's looking at.
-
 ## Search, Filter, and Sort — Explained
 
 Category, search, and sort stack on top of each other rather than
@@ -147,10 +135,6 @@ re-runs the whole fetch (through the same loading-skeleton flow as the
 initial page load) for the new country, and your category/search/sort
 choices stay applied to whatever comes back.
 
-The "Saved" tab works a little differently — it swaps the article list
-entirely for just your bookmarked articles, but category filtering,
-searching, and sorting still work normally on top of that shortened list.
-
 ## Bookmarks — Explained
 
 Bookmarks are stored in the browser's `localStorage` under one key,
@@ -167,9 +151,7 @@ tied to that specific news story). In practice GNews' top headlines
 don't change every few minutes, so ids tend to stay consistent between
 reloads in a normal browsing session — but if the underlying headlines
 shift, a bookmark could end up pointing at a different article than the
-one you originally saved. This is a normal trade-off for a project this
-size; fixing it properly would mean bookmarking by article URL instead
-of by id.
+one you originally saved.
 
 ## Error Handling — Explained
 
@@ -178,23 +160,18 @@ them differently:
 
 **While articles are loading**, the page shows gray skeleton boxes in
 place of the hero carousel, the latest-articles cards, and the article
-list — so the layout doesn't jump around once real content arrives, and
-it's clear to the user that something is happening rather than the page
-just being broken.
+list — so the layout doesn't jump around once real content arrives.
 
 **If the fetch fails** — GNews is down, the rate limit gets hit, the key
 is missing or invalid, or the backend can't be reached at all — the
 skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
-button that re-runs the fetch without needing a full page reload. The
-backend (`server/app.py`) is what generates these messages: it catches
-network exceptions and non-200 responses from GNews and turns them into
-a clear JSON error instead of letting the request hang or crash.
+button that re-runs the fetch without needing a full page reload.
 
 There's also a **Simulate error** button in the UI, which deliberately
-triggers the error state on demand. It exists purely so error handling
-can be demonstrated (in a demo video, for example) without needing to
-actually take an API offline or wait for a real rate-limit hit.
+triggers the error state on demand, so error handling can be shown in a
+demo video without needing to actually take an API offline or wait for a
+real rate-limit hit.
 
 ## Image Fallback (Topic Art)
 
@@ -217,10 +194,8 @@ moment the site went live.
 
 `server/app.py` solves this by being the only thing that ever talks to
 GNews directly. The key is read from a `.env` file on the server (via
-`python-dotenv`) and is never sent to the browser in any form — the
-frontend only ever calls `/api/articles` on its own origin, and the
-backend does the real request on its behalf. `.env` is listed in
-`.gitignore` specifically so it can never end up committed to the
+`python-dotenv`) and is never sent to the browser in any form. `.env` is
+listed in `.gitignore` so it can never end up committed to the
 repository by accident; `.env.example` is checked in instead, as a
 template showing what variables are needed without the real values.
 
@@ -295,38 +270,42 @@ articles in `js/mockData.js` instead of real headlines.
 
 The page is laid out top to bottom in a few distinct sections:
 
-1. **Header** — the site name, a search box that filters everything
-   below it, live at all times.
+1. **Header** — the site name and a search box that filters everything
+   below it.
 2. **Hero carousel** — the 3 newest articles overall, shown large with
    a bigger image, description, and save button. It auto-advances every
    4 seconds and pauses while your mouse is over it.
 3. **Latest Articles** — the next 4 newest articles (not repeating
    anything already in the hero carousel), shown as a horizontally
    scrolling row of smaller cards.
-4. **Article list / grid** — everything else, shown as a simple list
-   with a thumbnail, category badge, title, short description, and
-   estimated read time (calculated from the description length, since
-   the API only gives a short summary rather than the full article
-   text — so it's an approximation, not a true reading-time estimate).
-5. **Category chips and sort dropdown**, and an **All articles / Saved**
-   toggle, sit above the list and control what's shown in it (the hero
-   and latest-articles sections above are unaffected by these — they
-   always show the newest articles).
+4. **Article list / grid** — everything else, shown 6 at a time with a
+   Load More button, each row with a thumbnail, category badge, title,
+   short description, and estimated read time.
+5. **Category chips, country dropdown, sort dropdown, and the All
+   articles / Saved toggle** sit above the list and control what's shown
+   in it (the hero and latest-articles sections above are unaffected by
+   category/sort/saved — they always show the newest articles overall).
 
-## Deployment (Part Two)
+## Deployment
+
+This assignment requires deploying the app to two web servers (Web01,
+Web02) behind a load balancer (Lb01), with the load balancer splitting
+traffic between them. **The steps below are instructions for doing that
+deployment — the deployment itself hasn't happened yet.** This section
+gets updated with real results (and any real issues hit along the way)
+once it has.
 
 Each web server needs to run two things: the Flask backend (so
 `/api/articles` actually works) and nginx in front of it, serving the
 static frontend and proxying API calls through to Flask. The load
 balancer then just round-robins between the two servers.
 
-### 1. Web01 and Web02
+### 1. Web01 and Web02 (repeat identically on both)
 
-Copy the code over and set the backend up the same way as local:
+Clone the code and set up the backend:
 
 ```bash
-scp -r ./* user@web01:/var/www/global-news-hub/
-ssh user@web01
+git clone https://github.com/Ajang-Akoi-Arok/global-news-hub.git /var/www/global-news-hub
 cd /var/www/global-news-hub
 python3 -m venv venv
 source venv/bin/activate
@@ -341,8 +320,7 @@ localhost only — nginx is what actually faces the internet:
 venv/bin/gunicorn -w 2 -b 127.0.0.1:5050 server.app:app --daemon
 ```
 
-(Worth wrapping that in a systemd service so it survives a reboot, but a
-plain `--daemon` is enough to get this working.)
+(Worth wrapping that in a systemd service so it survives a reboot.)
 
 Then install the provided nginx config, which serves the static files
 and proxies `/api/` to the gunicorn process above:
@@ -353,9 +331,9 @@ sudo ln -s /etc/nginx/sites-available/global-news-hub.conf /etc/nginx/sites-enab
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
-Repeat on Web02. Verify each server independently before touching the
-load balancer: `curl http://<web01-ip>/` should return the dashboard's
-HTML, `curl http://<web01-ip>/health` should return `ok`, and
+Verify each server independently before touching the load balancer:
+`curl http://<web01-ip>/` should return the dashboard's HTML,
+`curl http://<web01-ip>/health` should return `ok`, and
 `curl http://<web01-ip>/api/articles` should return real article JSON
 (not a 404).
 
@@ -393,15 +371,26 @@ app in a browser.
 | GNews rate limit hit (429/403) | Error banner shown with a Retry button; no crash, no blank page |
 | Article has no image | Category-specific SVG illustration shown instead |
 | Image URL is broken or fails to load | Same SVG illustration swapped in automatically |
-| Search term matches nothing | "No news found" empty state with a Clear Filters button, instead of a blank grid |
+| Search term matches nothing | "No news found" empty state with a Clear Filters button |
 | "Saved" tab with zero bookmarks | Same empty state, so it's clear the list isn't broken, just empty |
 | More than 6 articles match the current filters | Only 6 show at first, with a Load more button for the rest |
 | Category filter + search combined | Both apply together — results match the category *and* the search term |
 | GNews key missing from `.env` | Backend returns a clear 500 error instead of crashing |
 | Unsupported country code requested | Backend rejects it with a 400 before making any request to GNews |
-| Country change leaves too few articles for a category | Hero/latest sections may absorb everything, showing "0 articles" in the list below — expected with a small result set, not a bug |
-| GNews unreachable / times out | Backend catches the network error and returns a clear message instead of hanging |
-| Same article appearing in hero and latest cards | Filtered out of the main list below so it's never shown three times |
+| Same article appearing in hero and latest cards | Filtered out of the main list below so it's never shown twice |
+
+## Known Limitations
+
+- **Bookmarks use article ids, not URLs.** As explained above, ids are
+  reassigned on every fetch, so a bookmark can technically drift to a
+  different article if GNews' top headlines shift between visits.
+- **Bookmarks are per-browser.** There's no account system, so they
+  don't sync across devices or browsers.
+- **No authentication.** Not required by the assignment rubric (it's
+  listed only as an optional bonus task), so it isn't implemented.
+- **Live mode depends on GNews' free tier**, including its rate limit
+  and quota. Mock mode exists specifically so the UI can be worked on
+  and demoed without depending on that.
 
 ## Challenges
 
@@ -426,5 +415,5 @@ built on top of their `/top-headlines` endpoint.
 ## Links
 
 - **Repository:** https://github.com/Ajang-Akoi-Arok/global-news-hub
-- **Live deployment (via load balancer):** _add Lb01 URL here_
-- **Demo video:** _add video link here_
+- **Live deployment (via load balancer):** _add Lb01 URL here once deployed_
+- **Demo video:** _add video link here once recorded_
