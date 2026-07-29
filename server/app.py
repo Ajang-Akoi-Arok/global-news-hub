@@ -12,7 +12,7 @@ import time
 
 import requests
 from dotenv import load_dotenv
-from flask import Flask, jsonify, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 
 load_dotenv()
 
@@ -24,6 +24,18 @@ NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "")
 NEWS_API_BASE_URL = os.environ.get("NEWS_API_BASE_URL", "https://gnews.io/api/v4")
 CATEGORIES = ["world", "business", "technology", "sports", "health", "science", "entertainment"]
 REQUEST_GAP_SECONDS = 0.35  # GNews free tier 429s on bursts of simultaneous requests
+
+# Every country code GNews's top-headlines endpoint accepts (see
+# https://docs.gnews.io/endpoints/top-headlines-endpoint). Validated
+# server-side so a bad code fails fast with a clear error instead of
+# silently returning empty results from GNews.
+COUNTRIES = {
+    "ar", "au", "at", "bd", "be", "bw", "br", "bg", "ca", "cl", "cn", "co", "cu", "cz",
+    "eg", "ee", "et", "fi", "fr", "de", "gh", "gr", "hk", "hu", "in", "id", "ie", "il",
+    "it", "jp", "ke", "lv", "lb", "lt", "my", "mx", "ma", "na", "nl", "nz", "ng", "no",
+    "pk", "pe", "ph", "pl", "pt", "ro", "ru", "sa", "sn", "sg", "sk", "si", "za", "kr",
+    "es", "se", "ch", "tw", "tz", "th", "tr", "ug", "ua", "ae", "gb", "us", "ve", "vn", "zw",
+}
 
 
 @app.route("/")
@@ -41,12 +53,19 @@ def articles():
     if not NEWS_API_KEY:
         return jsonify({"error": "NEWS_API_KEY is not configured on the server."}), 500
 
+    country = request.args.get("country", "").lower()
+    if country and country not in COUNTRIES:
+        return jsonify({"error": f"Unsupported country code: {country}"}), 400
+
     collected = []
     for category in CATEGORIES:
+        params = {"category": category, "lang": "en", "max": 4, "apikey": NEWS_API_KEY}
+        if country:
+            params["country"] = country
         try:
             resp = requests.get(
                 f"{NEWS_API_BASE_URL}/top-headlines",
-                params={"category": category, "lang": "en", "max": 4, "apikey": NEWS_API_KEY},
+                params=params,
                 timeout=10,
             )
         except requests.RequestException:

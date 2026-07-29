@@ -28,6 +28,7 @@ let heroArticleIds = [];
 let latestCardIds = [];
 let activeCategory = "all";
 let activeView = "all";
+let activeCountry = "";
 let sortMode = "newest";
 let searchTerm = "";
 
@@ -309,7 +310,7 @@ async function loadArticles(forceError = false) {
   renderCardSkeletons(latestCardsSkeleton);
 
   try {
-    const articles = await fetchArticles({ forceError });
+    const articles = await fetchArticles({ forceError, country: activeCountry });
     allArticles = articles;
 
     const heroArticles = articles
@@ -386,6 +387,14 @@ document.getElementById("search-input").addEventListener("input", (e) => {
 document.getElementById("sort-select").addEventListener("change", (e) => {
   sortMode = e.target.value;
   applyFiltersAndRender();
+});
+
+// Country isn't something we can filter client-side — GNews only returns
+// headlines for one country per request — so changing it re-fetches
+// instead of just re-rendering like the other filters do.
+document.getElementById("country-select").addEventListener("change", (e) => {
+  activeCountry = e.target.value;
+  loadArticles();
 });
 
 document.querySelectorAll(".chip").forEach((chip) => {

@@ -34,6 +34,15 @@ Sports, Health, Science, Entertainment — shown as clickable chips along
 the top of the article list. Clicking one narrows the list down to just
 that category; clicking "All" clears the filter.
 
+**Country filter.** A dropdown covering every country GNews's
+top-headlines endpoint supports (72 of them, from Argentina to
+Zimbabwe). Unlike the category chips, this one isn't free — GNews only
+returns headlines for one country per request, so there's no way to
+filter client-side across countries you haven't fetched yet. Changing it
+triggers a fresh fetch instead of an instant re-render. See
+[Search, filter, and sort — explained](#search-filter-and-sort--explained)
+for how this interacts with the rest of the filters.
+
 **Sorting.** Four sort modes: newest first, oldest first, source
 alphabetically, and title alphabetically. This applies to the main list
 further down the page — the hero carousel and the "Latest Articles" row
@@ -76,6 +85,14 @@ Requests` error if you send several requests back-to-back too quickly.
 Spacing them out costs a couple of extra seconds of load time, but keeps
 every request under the limit.
 
+If a country was selected in the dropdown, that gets added to every one
+of those seven requests as GNews' own `country` parameter — so "up to 28
+articles" becomes "up to 28 articles from that country" instead. The
+backend checks the country code against GNews' real list of 72 supported
+countries before making any request; an unsupported code gets rejected
+immediately with a `400` rather than silently sending a request GNews
+would just ignore.
+
 Once all seven categories have responded, the backend merges everything
 into a single list, gives each article a sequential id, and sends it
 back to the browser as JSON. Every article — whether it came from GNews
@@ -100,12 +117,22 @@ needs to know or care which one it's looking at.
 
 ## Search, Filter, and Sort — Explained
 
-These three features stack on top of each other rather than replacing
-one another. If you're on the World category, sorted oldest-first, and
-you type "election" into the search box, the app applies all three at
-once: only World articles, containing "election" somewhere in the title,
-description, or source, sorted oldest to newest. Switching categories or
-sort mode doesn't clear your search term, and vice versa.
+Category, search, and sort stack on top of each other rather than
+replacing one another. If you're on the World category, sorted
+oldest-first, and you type "election" into the search box, the app
+applies all three at once: only World articles, containing "election"
+somewhere in the title, description, or source, sorted oldest to newest.
+Switching categories or sort mode doesn't clear your search term, and
+vice versa.
+
+The country dropdown is the odd one out. Category/search/sort all work
+by filtering the articles already sitting in the browser, so they update
+instantly. Country can't work that way — GNews only gives you headlines
+for one country at a time, so there's nothing to filter locally until
+you've actually asked for that country's data. Changing the dropdown
+re-runs the whole fetch (through the same loading-skeleton flow as the
+initial page load) for the new country, and your category/search/sort
+choices stay applied to whatever comes back.
 
 The "Saved" tab works a little differently — it swaps the article list
 entirely for just your bookmarked articles, but category filtering,
@@ -357,6 +384,8 @@ app in a browser.
 | "Saved" tab with zero bookmarks | Same empty state, so it's clear the list isn't broken, just empty |
 | Category filter + search combined | Both apply together — results match the category *and* the search term |
 | GNews key missing from `.env` | Backend returns a clear 500 error instead of crashing |
+| Unsupported country code requested | Backend rejects it with a 400 before making any request to GNews |
+| Country change leaves too few articles for a category | Hero/latest sections may absorb everything, showing "0 articles" in the list below — expected with a small result set, not a bug |
 | GNews unreachable / times out | Backend catches the network error and returns a clear message instead of hanging |
 | Same article appearing in hero and latest cards | Filtered out of the main list below so it's never shown three times |
 

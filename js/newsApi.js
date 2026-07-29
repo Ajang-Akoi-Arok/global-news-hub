@@ -13,7 +13,7 @@ function simulateNetworkDelay(ms = 600) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function fetchArticles({ forceError = false } = {}) {
+async function fetchArticles({ forceError = false, country = "" } = {}) {
   await simulateNetworkDelay();
 
   if (forceError) {
@@ -21,10 +21,11 @@ async function fetchArticles({ forceError = false } = {}) {
   }
 
   if (typeof CONFIG === "undefined" || CONFIG.USE_MOCK_DATA) {
-    return MOCK_ARTICLES;
+    return country ? MOCK_ARTICLES.filter((a) => a.country === country) : MOCK_ARTICLES;
   }
 
-  const res = await fetch("/api/articles");
+  const url = country ? `/api/articles?country=${encodeURIComponent(country)}` : "/api/articles";
+  const res = await fetch(url);
   const data = await res.json();
   if (!res.ok) {
     throw new Error(data.error || `News API responded with ${res.status}`);
