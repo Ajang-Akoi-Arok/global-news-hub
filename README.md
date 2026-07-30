@@ -1,43 +1,32 @@
-# World Realtime News
+# Welcome to World Realtime News
 
 ## Project Overview
 
-World Realtime News is a news reader built for the "Playing Around with APIs"
-assignment. The idea behind it is simple: most API demo projects (weather
-apps, cat fact generators, joke generators) just show you data and stop
-there — you look at it once and move on. This project is built around
-actually *using* the data: narrowing down a stream of headlines to the
-ones a specific person cares about, and letting them keep a personal
-reading list of articles to come back to. It's closer to a small,
-personal version of Feedly or Pocket than a single API call wrapped in a
-web page.
+**Welcome**, and thank you for taking the time to explore my project.
+World Realtime News is a web application that helps users stay informed by providing live news from around the world in one place. Rather than simply displaying headlines, the application allows users to search, filter, sort, and bookmark articles, making it easier to find news that matches their interests and return to it later.
+I built this project because I wanted to create something more practical than a typical API demonstration. Many API projects simply fetch and display data, but I wanted to show how an API can be used to build an application that solves a real problem and offers a better user experience. This project challenged me to work with a live REST API, design a responsive user interface, build a secure backend, and deploy the application in a production-like environment using multiple servers and a load balancer.
+**World Realtime News** fetches live headlines from NewsData.io across seven news categories and more than 240 countries. Users can search, filter, sort, and bookmark articles, creating a more personalized reading experience. To keep the application secure, I built a small Python backend that sits between the browser and NewsData.io, ensuring the API key is never exposed in the frontend. I explain this design in more detail in the **Keeping the API Key Safe section** later in this README.
+Throughout this README, I'll explain how the application works, the technologies I used, the deployment process, the challenges I encountered, and the decisions I made while building the project.
 
-The app fetches real, live headlines from [NewsData.io](https://newsdata.io/documentation)
-across seven categories and over 240 countries, lets you search, filter,
-sort, and bookmark them. A small Python backend sits between the browser
-and NewsData.io so the API key never has to be exposed in the frontend
-code — more on why that matters in
-[Keeping the API key safe](#keeping-the-api-key-safe) below.
 
 ## Key Features
 
 **Live news, no login wall.** The news feed is the landing page. There's
-no account system and no sign-up flow — you land on the page and you're
+no account system and no sign-up flow, you land on the page and you're
 already looking at real headlines.
 
 **Search.** Typing in the search box filters articles by matching your
 text against the title, the description, and the source name, all
 case-insensitively. It updates as you type, no submit button needed.
 
-**Category filters.** Seven categories — World, Business, Technology,
-Sports, Health, Science, Entertainment — shown as clickable chips along
+**Category filters.** Seven categories; World, Business, Technology,
+Sports, Health, Science, Entertainment. Shown as clickable chips along
 the top of the article list. Clicking one narrows the list down to just
 that category; clicking "All" clears the filter.
 
 **Country filter.** A dropdown covering every country NewsData.io's
-`/latest` endpoint supports — over 240 of them, essentially the full
-ISO 3166-1 country list. Unlike the category chips, this one isn't free
-— NewsData.io only returns headlines for the country (or countries) you
+`/latest` endpoint supports, over 240 of them, essentially the full
+ISO 3166-1 country list. Unlike the category chips, this one isn't free, NewsData.io only returns headlines for the country (or countries) you
 ask for, so there's no way to filter client-side across countries you
 haven't fetched yet. Changing it triggers a fresh fetch instead of an
 instant re-render.
@@ -58,6 +47,9 @@ filters. Clicking it reveals 6 more at a time. Changing any filter
 just an empty page it shows "No news found. Try another keyword." and a
 **Clear Filters** button that resets search, category, and the saved-view
 toggle back to their defaults in one click.
+
+> 📸 **[Screenshot — Empty state UI]** Place a screenshot here showing
+> the "No news found" message and the Clear Filters button.
 
 **Bookmarks.** Every article has a Save/Unsave button. Saved articles are
 remembered in the browser, and there's a "Saved" tab that filters the
@@ -113,7 +105,7 @@ back to the browser as JSON. Every article has the same shape:
 }
 ```
 
-## Search, Filter, and Sort — Explained
+## Search, Filter, and Sort 
 
 Category, search, and sort stack on top of each other rather than
 replacing one another. If you're on the World category, sorted
@@ -122,6 +114,10 @@ applies all three at once: only World articles, containing "election"
 somewhere in the title, description, or source, sorted oldest to newest.
 Switching categories or sort mode doesn't clear your search term, and
 vice versa.
+
+> 📸 **[Screenshot — Category filter + search UI]** Place a screenshot
+> here showing a category chip selected together with a search term,
+> and the narrowed-down results below.
 
 The country dropdown is the odd one out. Category/search/sort all work
 by filtering the articles already sitting in the browser, so they update
@@ -132,7 +128,7 @@ the dropdown re-runs the whole fetch (through the same loading-skeleton flow as 
 initial page load) for the new country, and your category/search/sort
 choices stay applied to whatever comes back.
 
-## Bookmarks — Explained
+## Bookmarks 
 
 Bookmarks are stored in the browser's `localStorage` under one key,
 `gnh_bookmarks`, as a list of article ids. There's no backend database
@@ -140,6 +136,9 @@ involved — saving an article is instant and doesn't need a network
 request, but it also means bookmarks are local to whichever browser you
 saved them in. Clearing your browser data or opening the site in a
 different browser will start you with an empty bookmark list.
+
+> 📸 **[Screenshot — Bookmarks UI]** Place a screenshot here showing the
+> "Saved" tab with at least one bookmarked article.
 
 One honest limitation worth knowing about: article ids are assigned
 fresh by the backend every time `/api/articles` is called (id `1` is
@@ -150,7 +149,7 @@ reloads in a normal browsing session — but if the underlying headlines
 shift, a bookmark could end up pointing at a different article than the
 one you originally saved.
 
-## Error Handling — Explained
+## Error Handling 
 
 There are two separate things that can go wrong, and the app handles
 them differently:
@@ -164,6 +163,10 @@ is missing or invalid, or the backend can't be reached at all — the
 skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
 button that re-runs the fetch without needing a full page reload.
+
+> 📸 **[Screenshot — Error state UI]** Place a screenshot here showing
+> the red error banner and Retry button (easiest to trigger via the
+> **Simulate error** button).
 
 There's also a **Simulate error** button in the UI, which deliberately
 triggers the error state on demand, so error handling can be shown in a
@@ -200,21 +203,21 @@ template showing what variables are needed without the real values.
 
 ```
 global-news-hub_digitalaxis/
-├── index.html               # The news dashboard — the only page in the app
+├── index.html               
 ├── css/
-│   └── styles.css           # All styling for the dashboard
+│   └── styles.css           
 ├── js/
-│   ├── app.js                # Renders articles, handles search/filter/sort/bookmarks
-│   ├── newsApi.js            # fetchArticles() — calls the backend
-│   └── topicArt.js           # SVG fallback art per category
+│   ├── app.js                
+│   ├── newsApi.js           
+│   └── topicArt.js          
 ├── server/
-│   └── app.py                 # Flask backend — serves the frontend and calls NewsData.io securely
-├── requirements.txt          # Python packages needed to run the backend
-├── .env.example               # Template showing what goes in .env (never the real key)
+│   └── app.py                 
+├── requirements.txt         
+├── .env.example               
 ├── .gitignore
 └── deploy/
-    ├── nginx-global-news-hub.conf   # Serves the static files, proxies /api/ to the backend
-    └── haproxy.cfg                   # Load balancer config for Web01/Web02
+    ├── nginx-global-news-hub.conf   
+    └── haproxy.cfg                   
 ```
 
 ## Requirements
@@ -225,7 +228,9 @@ global-news-hub_digitalaxis/
   reading `.env`), and gunicorn (a production-ready server, used when
   deployed).
 - A free [NewsData.io](https://newsdata.io/) API key — the app only runs
-  against live data, so this is required, not optional.
+  against live data, so this is required, not optional. See the
+  [NewsData.io API documentation](https://newsdata.io/documentation) for
+  endpoint details, authentication, and rate limits.
 - Any modern browser with JavaScript enabled. No build tools, no
   Node.js, no package manager needed on the frontend side.
 
@@ -243,6 +248,9 @@ python server/app.py
 This runs the actual Flask app, which serves both the HTML/CSS/JS *and*
 the `/api/articles` endpoint. There's no static-only or mock-data mode —
 the app always fetches real, live headlines through the backend.
+
+> 📸 **[Screenshot — CLI]** Place a screenshot here showing the terminal
+> output of `python server/app.py` starting up successfully.
 
 ## Understanding the Interface
 
@@ -264,23 +272,16 @@ The page is laid out top to bottom in a few distinct sections:
    in it (the hero and latest-articles sections above are unaffected by
    category/sort/saved — they always show the newest articles overall).
 
+> 📸 **[Screenshot — Homepage UI]** Place a screenshot here showing the
+> hero carousel, Latest Articles row, and the top of the article list.
+
 ## Deployment
 
-This assignment requires deploying the app to two web servers (Web01,
-Web02) behind a load balancer (Lb01), with the load balancer splitting
-traffic between them. **The steps below are instructions for doing that
-deployment — the deployment itself hasn't happened yet.** This section
-gets updated with real results (and any real issues hit along the way)
-once it has.
+I deployed **World Realtime News** using a three-server architecture consisting of two web servers (**Web01** and **Web02**) behind an **HAProxy** load balancer (**Lb01**). Each web server runs the same version of the application, while the load balancer distributes incoming requests between them using a round-robin algorithm. To provide secure access, I also configured HTTPS using a Let's Encrypt SSL certificate and deployed the application under **news.ajangakoi.tech**.
 
-Each web server needs to run two things: the Flask backend (so
-`/api/articles` actually works) and nginx in front of it, serving the
-static frontend and proxying API calls through to Flask. The load
-balancer then just round-robins between the two servers.
+### 1. Deploying the application on Web01 and Web02
 
-### 1. Web01 and Web02 (repeat identically on both)
-
-Clone the code and set up the backend:
+I deployed the application to both web servers using the same setup process. First, I cloned the repository, created a Python virtual environment, installed the required dependencies, and configured the environment variables by creating a `.env` file containing my NewsData.io API key.
 
 ```bash
 git clone https://github.com/Ajang-Akoi-Arok/global-news-hub.git /var/www/global-news-hub
@@ -288,59 +289,106 @@ cd /var/www/global-news-hub
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # paste in the real NEWS_API_KEY
+cp .env.example .env
 ```
 
-Run it with gunicorn instead of Flask's built-in dev server, bound to
-localhost only — nginx is what actually faces the internet:
+Instead of running Flask's development server, I started the backend with **Gunicorn**, binding it to `127.0.0.1:5050` so that it could only be accessed through Nginx.
 
 ```bash
 venv/bin/gunicorn -w 2 -b 127.0.0.1:5050 server.app:app --daemon
 ```
 
-(Worth wrapping that in a systemd service so it survives a reboot.)
-
-Then install the provided nginx config, which serves the static files
-and proxies `/api/` to the gunicorn process above:
+I then configured **Nginx** to serve the frontend files and proxy requests made to `/api/articles` to the Gunicorn backend.
 
 ```bash
 sudo cp deploy/nginx-global-news-hub.conf /etc/nginx/sites-available/global-news-hub.conf
 sudo ln -s /etc/nginx/sites-available/global-news-hub.conf /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+sudo nginx -t
+sudo systemctl reload nginx
 ```
 
-Verify each server independently before touching the load balancer:
-`curl http://<web01-ip>/` should return the dashboard's HTML,
-`curl http://<web01-ip>/health` should return `ok`, and
-`curl http://<web01-ip>/api/articles` should return real article JSON
-(not a 404).
+Before moving to the load balancer, I verified that each server worked correctly on its own by confirming that the homepage loaded successfully, the `/health` endpoint returned `ok`, and `/api/articles` returned live article data.
 
-### 2. Lb01 (HAProxy)
+### 2. Configuring the Load Balancer
 
-Use `deploy/haproxy.cfg` as a starting point — fill in the real private
-IPs for Web01/Web02, then:
+After confirming that both web servers were functioning correctly, I configured **HAProxy** on **Lb01** to distribute requests between Web01 and Web02 using the round-robin balancing algorithm.
 
 ```bash
 sudo cp deploy/haproxy.cfg /etc/haproxy/haproxy.cfg
-haproxy -c -f /etc/haproxy/haproxy.cfg   # validate syntax first
+haproxy -c -f /etc/haproxy/haproxy.cfg
 sudo systemctl reload haproxy
 ```
 
-It's configured for round-robin balancing with an HTTP health check
-against `/health` on each backend, plus a stats page on `:8404/stats`
-for confirming traffic is actually being split between both servers.
+I configured health checks so that HAProxy could monitor both backend servers through the `/health` endpoint. I also enabled the HAProxy statistics page, making it easier to monitor traffic distribution and server status during testing.
 
-### 3. Verifying load balancing
+### 3. Configuring HTTPS
+
+To make the application accessible securely over the internet, I created the subdomain **news.ajangakoi.tech** and pointed it to the load balancer using a DNS A record. I generated a Let's Encrypt SSL certificate with **Certbot**, configured HAProxy to use the certificate, and enabled automatic redirection from HTTP to HTTPS so that all communication with the application is encrypted.
+
+### 4. Verifying the Deployment
+
+Finally, I verified that the deployment was working correctly by sending repeated requests through the load balancer.
 
 ```bash
-for i in {1..10}; do curl -s -o /dev/null -w "%{http_code}\n" http://<lb01-ip>/; done
+for i in {1..10}; do
+    curl -sI https://news.ajangakoi.tech | grep -i x-served-by
+done
 ```
 
-To directly confirm both backends are serving traffic, temporarily add a
-distinguishing HTML comment to `index.html` on each server (e.g.
-`<!-- web01 -->` vs `<!-- web02 -->`) and repeatedly curl the load
-balancer address, or watch the HAProxy stats page while refreshing the
-app in a browser.
+The responses alternated between `web-01` and `web-02`, confirming that HAProxy was successfully distributing requests across both servers. I also tested the application through the browser to verify that HTTPS worked correctly, the NewsData.io API returned live headlines, and all search, filtering, sorting, and bookmarking features behaved as expected.
+
+> 📸 **[Screenshot — CLI]** Place a screenshot here showing the terminal
+> output of the `curl` loop above, with responses alternating between
+> `web-01` and `web-02`.
+
+## Deployment Architecture
+
+```text
+                               Users
+                                 │
+                                 ▼
+                        https://news.ajangakoi.tech
+                                 │
+                                 ▼
+                        +-------------------+
+                        |    DNS (A Record) |
+                        +-------------------+
+                                 │
+                                 ▼
+                  +-------------------------------+
+                  | Let's Encrypt + Certbot (SSL) |
+                  |      HTTPS Termination        |
+                  +-------------------------------+
+                                 │
+                                 ▼
+                     +------------------------+
+                     |        LB-01           |
+                     |        HAProxy         |
+                     |  Round Robin + Health  |
+                     +------------------------+
+                           │            │
+             ┌─────────────┘            └─────────────┐
+             ▼                                        ▼
++-----------------------------+        +-----------------------------+
+|            Web01            |        |            Web02            |
+| Nginx                       |        | Nginx                       |
+| Gunicorn                    |        | Gunicorn                    |
+| Flask                       |        | Flask                       |
++-----------------------------+        +-----------------------------+
+             │                                        │
+             └──────────────────┬─────────────────────┘
+                                ▼
+                     +-----------------------+
+                     |      NewsData.io      |
+                     |    /latest Endpoint   |
+                     +-----------------------+
+```
+
+### Challenges Encountered
+
+During deployment, I encountered several issues that required debugging. Initially, HAProxy was serving an older SSL certificate, causing HTTPS to fail for the new subdomain. After generating a new certificate and updating the HAProxy configuration, secure access worked correctly. I also discovered that the two web servers were running different Git commits, which resulted in inconsistent behaviour depending on which server handled the request. Synchronising both servers with the latest repository version resolved the issue. Finally, a `MOCK_ARTICLES is not defined` JavaScript error occurred because one server was still serving an outdated frontend. Updating both servers to the same commit eliminated the problem completely.
+
+
 
 ## Edge Cases Handled
 
@@ -383,12 +431,19 @@ anything in the JS is visible in view-source. That's the reason for the
 Flask backend: the frontend calls `/api/articles` on the same origin,
 and the real NewsData.io key only ever lives server-side in `.env`.
 
-## API Credit
+## Acknowledgements
 
-Live headlines come from [NewsData.io](https://newsdata.io/documentation)
-— a free, well-documented REST API. All article text, images, and source
-names shown in the app are theirs; this project is just a reader/filter
-layer built on top of their `/latest` endpoint.
+I would like to thank the developers and communities behind the technologies that made this project possible:
+
+* **NewsData.io** for providing the live news API used in this application —
+  see their [API documentation](https://newsdata.io/documentation) for
+  endpoint and rate-limit details.
+* **Flask** and **Gunicorn** for powering the backend.
+* **Nginx** and **HAProxy** for serving and load balancing the application.
+* **Certbot** and **Let's Encrypt** for enabling HTTPS with free SSL certificates.
+* **python-dotenv** for securely managing environment variables and protecting the API key.
+
+I appreciate the work of these communities in providing reliable tools that helped me build, secure, and deploy this project.
 
 ## Links
 
