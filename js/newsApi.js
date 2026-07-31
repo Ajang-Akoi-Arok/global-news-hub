@@ -4,9 +4,9 @@
  * the HTTP details underneath.
  *
  * Calls the app's own Flask backend at /api/articles (see server/app.py),
- * which calls NewsData.io (https://newsdata.io/documentation) server-side
- * across all seven categories and returns them pre-merged. The API key
- * never reaches the browser.
+ * which calls the Currents API (https://currentsapi.services/en/docs/)
+ * server-side across all seven categories and returns them pre-merged.
+ * The API key never reaches the browser.
  */
 
 async function fetchArticles({ forceError = false, country = "" } = {}) {

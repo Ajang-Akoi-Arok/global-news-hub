@@ -5,7 +5,7 @@
 **Welcome**, and thank you for taking the time to explore my project.
 World Realtime News is a web application that helps users stay informed by providing live news from around the world in one place. Rather than simply displaying headlines, the application allows users to search, filter, sort, and bookmark articles, making it easier to find news that matches their interests and return to it later.
 I built this project because I wanted to create something more practical than a typical API demonstration. Many API projects simply fetch and display data, but I wanted to show how an API can be used to build an application that solves a real problem and offers a better user experience. This project challenged me to work with a live REST API, design a responsive user interface, build a secure backend, and deploy the application in a production-like environment using multiple servers and a load balancer.
-**World Realtime News** fetches live headlines from NewsData.io across seven news categories and more than 240 countries. Users can search, filter, sort, and bookmark articles, creating a more personalized reading experience. To keep the application secure, I built a small Python backend that sits between the browser and NewsData.io, ensuring the API key is never exposed in the frontend. I explain this design in more detail in the **Keeping the API Key Safe section** later in this README.
+**World Realtime News** fetches live headlines from the [Currents API](https://currentsapi.services/en/docs/) across seven news categories and any country you filter by. Users can search, filter, sort, and bookmark articles, creating a more personalized reading experience. To keep the application secure, I built a small Python backend that sits between the browser and Currents, ensuring the API key is never exposed in the frontend. I explain this design in more detail in the **Keeping the API Key Safe section** later in this README.
 Throughout this README, I'll explain how the application works, the technologies I used, the deployment process, the challenges I encountered, and the decisions I made while building the project.
 
 
@@ -24,12 +24,11 @@ Sports, Health, Science, Entertainment. Shown as clickable chips along
 the top of the article list. Clicking one narrows the list down to just
 that category; clicking "All" clears the filter.
 
-**Country filter.** A dropdown covering every country NewsData.io's
-`/latest` endpoint supports, over 240 of them, essentially the full
-ISO 3166-1 country list. Unlike the category chips, this one isn't free, NewsData.io only returns headlines for the country (or countries) you
-ask for, so there's no way to filter client-side across countries you
-haven't fetched yet. Changing it triggers a fresh fetch instead of an
-instant re-render.
+**Country filter.** A dropdown of ISO 3166-1 two-letter country codes.
+Unlike the category chips, this one isn't free — the Currents API only
+returns headlines for the country you ask for, so there's no way to
+filter client-side across countries you haven't fetched yet. Changing it
+triggers a fresh fetch instead of an instant re-render.
 
 **Sorting.** Four sort modes: newest first, oldest first, source
 alphabetically, and title alphabetically. This applies to the main list
@@ -66,27 +65,26 @@ JavaScript, laid out to work on both desktop and mobile.
 
 ## How Articles Get Fetched
 
-The frontend never talks to NewsData.io directly. Instead, `js/newsApi.js`
+The frontend never talks to Currents directly. Instead, `js/newsApi.js`
 exposes one function, `fetchArticles()`, that the rest of the app calls
 without needing to know where the data actually comes from — it calls
 the app's own backend at `/api/articles`, which is where the real
-NewsData.io request happens.
+Currents API request happens.
 
 On the backend side, `server/app.py` loops through all seven categories
-one at a time, asking NewsData.io's `/latest` endpoint for up to 4
-headlines from each — that's up to 28 articles per page load, and one
-request per category (7 total). NewsData.io's free tier gives 200
-requests ("credits") a day rather than a tight per-second burst limit,
-so a small delay between requests is kept mainly as a safety margin
-rather than a hard requirement.
+one at a time, asking Currents' `/search` endpoint for headlines in that
+category and keeping the first 4 — that's up to 28 articles per page
+load, and one request per category (7 total). Currents' free tier gives
+1,000 requests a day, so a small delay between requests is kept mainly as
+a safety margin rather than a hard requirement.
 
 If a country was selected in the dropdown, that gets added to every one
-of those seven requests as NewsData.io's own `country` parameter — so
+of those seven requests as Currents' own `country` parameter — so
 "up to 28 articles" becomes "up to 28 articles from that country"
-instead. The backend checks the country code against NewsData.io's real
-list of supported countries (scraped from their documentation) before
-making any request; an unsupported code gets rejected immediately with a
-`400` rather than sending a request that would just come back empty.
+instead. The backend checks that the country code is a plausible 2-letter
+code before making any request; an obviously malformed code gets rejected
+immediately with a `400` rather than sending a request that would just
+come back empty.
 
 Once all seven categories have responded, the backend merges everything
 into a single list, gives each article a sequential id, and sends it
@@ -121,7 +119,7 @@ vice versa.
 
 The country dropdown is the odd one out. Category/search/sort all work
 by filtering the articles already sitting in the browser, so they update
-instantly. Country can't work that way — NewsData.io only gives you
+instantly. Country can't work that way — the Currents API only gives you
 headlines for the country you ask for, so there's nothing to filter
 locally until you've actually asked for that country's data. Changing
 the dropdown re-runs the whole fetch (through the same loading-skeleton flow as the
@@ -143,8 +141,8 @@ different browser will start you with an empty bookmark list.
 One honest limitation worth knowing about: article ids are assigned
 fresh by the backend every time `/api/articles` is called (id `1` is
 just "the first article in this response," not a permanent identifier
-tied to that specific news story). In practice NewsData.io's top
-headlines don't change every few minutes, so ids tend to stay consistent between
+tied to that specific news story). In practice the top headlines don't
+change every few minutes, so ids tend to stay consistent between
 reloads in a normal browsing session — but if the underlying headlines
 shift, a bookmark could end up pointing at a different article than the
 one you originally saved.
@@ -158,7 +156,7 @@ them differently:
 place of the hero carousel, the latest-articles cards, and the article
 list — so the layout doesn't jump around once real content arrives.
 
-**If the fetch fails** — NewsData.io is down, the daily quota is used up, the key
+**If the fetch fails** — Currents is down, the daily quota is used up, the key
 is missing or invalid, or the backend can't be reached at all — the
 skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
@@ -175,7 +173,7 @@ real rate-limit hit.
 
 ## Image Fallback (Topic Art)
 
-Not every article NewsData.io returns has a usable image — some are missing
+Not every article Currents returns has a usable image — some are missing
 one entirely, and occasionally an image URL is broken or slow to load.
 Rather than showing a broken-image icon, `js/topicArt.js` provides a
 small, flat SVG illustration for each of the seven categories. If an
@@ -187,15 +185,17 @@ swaps it out for the same illustration after the fact.
 
 This is the reason the project has a backend at all. If this were a
 purely static site — just HTML, CSS, and JavaScript with no server —
-there would be nowhere to hide the NewsData.io API key. Anything written
+there would be nowhere to hide the Currents API key. Anything written
 into a `.js` file is visible to anyone who opens their browser's dev
 tools or views the page source, so the key would effectively be public
 the moment the site went live.
 
 `server/app.py` solves this by being the only thing that ever talks to
-NewsData.io directly. The key is read from a `.env` file on the server (via
-`python-dotenv`) and is never sent to the browser in any form. `.env` is
-listed in `.gitignore` so it can never end up committed to the
+Currents directly. The key is read from a `.env` file on the server (via
+`python-dotenv`) and sent to Currents as an `Authorization` header rather
+than a URL query parameter, so it doesn't end up sitting in plaintext in
+server access logs either. It's never sent to the browser in any form.
+`.env` is listed in `.gitignore` so it can never end up committed to the
 repository by accident; `.env.example` is checked in instead, as a
 template showing what variables are needed without the real values.
 
@@ -224,12 +224,12 @@ global-news-hub_digitalaxis/
 
 - **Python 3.9+** for the backend.
 - The four packages listed in `requirements.txt` — Flask (the web
-  framework), requests (for calling NewsData.io), python-dotenv (for
+  framework), requests (for calling Currents), python-dotenv (for
   reading `.env`), and gunicorn (a production-ready server, used when
   deployed).
-- A free [NewsData.io](https://newsdata.io/) API key — the app only runs
-  against live data, so this is required, not optional. See the
-  [NewsData.io API documentation](https://newsdata.io/documentation) for
+- A free [Currents API](https://currentsapi.services/en) key — the app
+  only runs against live data, so this is required, not optional. See the
+  [Currents API documentation](https://currentsapi.services/en/docs/) for
   endpoint details, authentication, and rate limits.
 - Any modern browser with JavaScript enabled. No build tools, no
   Node.js, no package manager needed on the frontend side.
@@ -240,7 +240,7 @@ global-news-hub_digitalaxis/
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env        # then paste your NewsData.io key into NEWS_API_KEY
+cp .env.example .env        # then paste your Currents key into NEWS_API_KEY
 python server/app.py
 # open http://localhost:5050
 ```
@@ -281,7 +281,7 @@ I deployed **World Realtime News** using a three-server architecture consisting 
 
 ### 1. Deploying the application on Web01 and Web02
 
-I deployed the application to both web servers using the same setup process. First, I cloned the repository, created a Python virtual environment, installed the required dependencies, and configured the environment variables by creating a `.env` file containing my NewsData.io API key.
+I deployed the application to both web servers using the same setup process. First, I cloned the repository, created a Python virtual environment, installed the required dependencies, and configured the environment variables by creating a `.env` file containing my Currents API key.
 
 ```bash
 git clone https://github.com/Ajang-Akoi-Arok/global-news-hub.git /var/www/global-news-hub
@@ -335,7 +335,7 @@ for i in {1..10}; do
 done
 ```
 
-The responses alternated between `web-01` and `web-02`, confirming that HAProxy was successfully distributing requests across both servers. I also tested the application through the browser to verify that HTTPS worked correctly, the NewsData.io API returned live headlines, and all search, filtering, sorting, and bookmarking features behaved as expected.
+The responses alternated between `web-01` and `web-02`, confirming that HAProxy was successfully distributing requests across both servers. I also tested the application through the browser to verify that HTTPS worked correctly, the Currents API returned live headlines, and all search, filtering, sorting, and bookmarking features behaved as expected.
 
 > 📸 **[Screenshot — CLI]** Place a screenshot here showing the terminal
 > output of the `curl` loop above, with responses alternating between
@@ -379,8 +379,8 @@ The responses alternated between `web-01` and `web-02`, confirming that HAProxy 
              └──────────────────┬─────────────────────┘
                                 ▼
                      +-----------------------+
-                     |      NewsData.io      |
-                     |    /latest Endpoint   |
+                     |      Currents API     |
+                     |    /search Endpoint   |
                      +-----------------------+
 ```
 
@@ -402,42 +402,55 @@ During deployment, I encountered several issues that required debugging. Initial
 | More than 6 articles match the current filters | Only 6 show at first, with a Load more button for the rest |
 | Category filter + search combined | Both apply together — results match the category *and* the search term |
 | API key missing from `.env` | Backend returns a clear 500 error instead of crashing |
-| Unsupported country code requested | Backend rejects it with a 400 before making any request to NewsData.io |
+| Malformed country code requested | Backend rejects it with a 400 before making any request to Currents |
 | Same article appearing in hero and latest cards | Filtered out of the main list below so it's never shown twice |
 
 ## Known Limitations
 
 - **Bookmarks use article ids, not URLs.** As explained above, ids are
   reassigned on every fetch, so a bookmark can technically drift to a
-  different article if NewsData.io's top headlines shift between visits.
+  different article if the top headlines shift between visits.
 - **Bookmarks are per-browser.** There's no account system, so they
   don't sync across devices or browsers.
 - **No authentication.** Not required by the assignment rubric (it's
   listed only as an optional bonus task), so it isn't implemented.
-- **Depends entirely on NewsData.io's free tier**, including its 200
-  requests/day quota — there's no mock-data mode to fall back on if the
-  quota runs out or the key stops working.
+- **Depends entirely on the Currents API's free tier**, including its
+  1,000 requests/day quota and 20-results-per-request cap — there's no
+  mock-data mode to fall back on if the quota runs out or the key stops
+  working.
+- **"Source" is really the article's author field.** Currents doesn't
+  return a dedicated publisher/outlet field the way some news APIs do —
+  the closest equivalent is `author`, which is sometimes a byline,
+  sometimes the outlet name, and sometimes empty (shown as "Unknown").
 
 ## Challenges
 
-The main one was working within NewsData.io's free-tier budget — 200
-requests ("credits") per day, and every page load costs 7 of them (one
-per category). That's roughly 28 full page loads per day before the
-quota resets, so testing and demoing needs to be deliberate about how
-often the app gets reloaded.
+The app originally ran on NewsData.io, but its free tier's 200
+requests-a-day quota ran out during development and testing — every page
+load costs 7 requests (one per category), so that's only about 28 full
+page loads a day. That pushed me to switch providers to the Currents API
+partway through the project, which has a much more generous 1,000
+requests/day free tier. Swapping providers meant rewriting the fetch
+logic in `server/app.py`: a different base URL and endpoint (`/search`
+instead of `/latest`), the API key moving from a URL query parameter to
+an `Authorization` header, the response's article list living under a
+different JSON key (`news` instead of `results`), and normalizing a
+differently-formatted published-date string. Because the frontend only
+ever talks to the backend's own `/api/articles` shape (never to the news
+API directly), none of that swap touched `js/` at all.
 
-The other was that a purely static site can't keep an API key secret —
-anything in the JS is visible in view-source. That's the reason for the
-Flask backend: the frontend calls `/api/articles` on the same origin,
-and the real NewsData.io key only ever lives server-side in `.env`.
+The other challenge was that a purely static site can't keep an API key
+secret — anything in the JS is visible in view-source. That's the reason
+for the Flask backend: the frontend calls `/api/articles` on the same
+origin, and the real Currents key only ever lives server-side in `.env`.
 
 ## Acknowledgements
 
 I would like to thank the developers and communities behind the technologies that made this project possible:
 
-* **NewsData.io** for providing the live news API used in this application —
-  see their [API documentation](https://newsdata.io/documentation) for
-  endpoint and rate-limit details.
+* **Currents API** for providing the live news API used in this
+  application — see their [API documentation](https://currentsapi.services/en/docs/)
+  for endpoint and rate-limit details.
 * **Flask** and **Gunicorn** for powering the backend.
 * **Nginx** and **HAProxy** for serving and load balancing the application.
 * **Certbot** and **Let's Encrypt** for enabling HTTPS with free SSL certificates.

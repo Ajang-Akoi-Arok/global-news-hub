@@ -421,8 +421,8 @@ document.getElementById("sort-select").addEventListener("change", (e) => {
   applyFiltersAndRender();
 });
 
-// Country isn't something we can filter client-side — NewsData.io only returns
-// headlines for one country per request — so changing it re-fetches
+// Country isn't something we can filter client-side — the backend only
+// fetches headlines for one country per request — so changing it re-fetches
 // instead of just re-rendering like the other filters do.
 document.getElementById("country-select").addEventListener("change", (e) => {
   activeCountry = e.target.value;

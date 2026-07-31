@@ -2,13 +2,14 @@
 Flask backend for World Realtime News.
 
 Serves the static frontend (index.html, css/, js/) and one API endpoint,
-/api/articles, that fetches live headlines from NewsData.io on the server
-side — so the API key lives in an environment variable here, never in
-browser JS or network traffic. See js/newsApi.js for the frontend side of
-this.
+/api/articles, that fetches live headlines from the Currents News API on
+the server side — so the API key lives in an environment variable here,
+never in browser JS or network traffic. See js/newsApi.js for the
+frontend side of this.
 """
 
 import os
+import re
 import time
 
 import requests
@@ -22,41 +23,33 @@ ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 app = Flask(__name__, static_folder=ROOT_DIR, static_url_path="")
 
 NEWS_API_KEY = os.environ.get("NEWS_API_KEY", "")
-NEWS_API_BASE_URL = os.environ.get("NEWS_API_BASE_URL", "https://newsdata.io/api/1")
+NEWS_API_BASE_URL = os.environ.get("NEWS_API_BASE_URL", "https://api.currentsapi.services/v1")
 CATEGORIES = ["world", "business", "technology", "sports", "health", "science", "entertainment"]
+ARTICLES_PER_CATEGORY = 4
 REQUEST_GAP_SECONDS = 0.35  # small safety margin between requests
 
-# Every country code NewsData.io's /latest endpoint accepts (ISO 3166-1
-# alpha-2, scraped from https://newsdata.io/documentation's "Supported
-# Countries" table). Validated server-side so a bad code fails fast with a
-# clear error instead of silently returning empty results from the API.
-COUNTRIES = {
-    "ad", "ae", "af", "ag", "ai", "al", "am", "an", "ao", "aq",
-    "ar", "as", "at", "au", "aw", "az", "ba", "bb", "bd", "be",
-    "bf", "bg", "bh", "bi", "bj", "bm", "bn", "bo", "br", "bs",
-    "bt", "bv", "bw", "by", "bz", "ca", "cd", "cf", "cg", "ch",
-    "ci", "ck", "cl", "cm", "cn", "co", "cr", "cu", "cv", "cw",
-    "cx", "cy", "cz", "de", "dj", "dk", "dm", "do", "dz", "ec",
-    "ee", "eg", "eh", "er", "es", "et", "fi", "fj", "fk", "fm",
-    "fo", "fr", "ga", "gb", "gd", "ge", "gf", "gh", "gi", "gl",
-    "gm", "gn", "gp", "gq", "gr", "gs", "gt", "gu", "gw", "gy",
-    "hk", "hm", "hn", "hr", "ht", "hu", "id", "ie", "il", "in",
-    "io", "iq", "ir", "is", "it", "je", "jm", "jo", "jp", "ke",
-    "kg", "kh", "ki", "km", "kn", "kp", "kr", "kw", "ky", "kz",
-    "la", "lb", "lc", "li", "lk", "lr", "ls", "lt", "lu", "lv",
-    "ly", "ma", "mc", "md", "me", "mg", "mh", "mk", "ml", "mm",
-    "mn", "mo", "mp", "mq", "mr", "ms", "mt", "mu", "mv", "mw",
-    "mx", "my", "mz", "na", "nc", "ne", "nf", "ng", "ni", "nl",
-    "no", "np", "nr", "nu", "nz", "om", "pa", "pe", "pf", "pg",
-    "ph", "pk", "pl", "pm", "pn", "pr", "ps", "pt", "pw", "py",
-    "qa", "re", "ro", "ru", "rw", "sa", "sb", "sc", "sd", "se",
-    "sg", "sh", "si", "sj", "sk", "sl", "sm", "sn", "so", "sr",
-    "st", "sv", "sy", "sz", "tc", "td", "tf", "tg", "th", "tj",
-    "tk", "tl", "tm", "tn", "to", "tp", "tr", "tt", "tv", "tw",
-    "tz", "ua", "ug", "us", "uy", "uz", "va", "vc", "ve", "vg",
-    "vi", "vu", "wf", "ws", "xk", "ye", "yt", "yu", "za", "zm",
-    "zw",
-}
+# Currents' /search endpoint accepts a "country" filter but its docs don't
+# publish an exhaustive supported-country list the way NewsData.io's did,
+# so instead of a hardcoded whitelist this just checks the shape (a
+# 2-letter code) and lets Currents itself be the source of truth — an
+# unrecognized code just comes back with zero results rather than an error.
+COUNTRY_CODE_RE = re.compile(r"^[a-z]{2}$")
+
+# "YYYY-MM-DD HH:MM:SS +0000" -> "YYYY-MM-DDTHH:MM:SS+00:00" (falls back to
+# the raw string if Currents ever changes their format, rather than raising).
+PUBLISHED_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\s*([+-]\d{2}):?(\d{2}))?$")
+
+
+def normalize_published(raw):
+    if not raw:
+        return None
+    match = PUBLISHED_RE.match(raw.strip())
+    if not match:
+        return raw
+    date_part, time_part, offset_hour, offset_min = match.groups()
+    if offset_hour:
+        return f"{date_part}T{time_part}{offset_hour}:{offset_min}"
+    return f"{date_part}T{time_part}Z"
 
 
 @app.route("/")
@@ -75,18 +68,20 @@ def articles():
         return jsonify({"error": "NEWS_API_KEY is not configured on the server."}), 500
 
     country = request.args.get("country", "").lower()
-    if country and country not in COUNTRIES:
+    if country and not COUNTRY_CODE_RE.match(country):
         return jsonify({"error": f"Unsupported country code: {country}"}), 400
 
+    headers = {"Authorization": NEWS_API_KEY}
     collected = []
     for category in CATEGORIES:
-        params = {"category": category, "language": "en", "size": 4, "apikey": NEWS_API_KEY}
+        params = {"category": category, "language": "en"}
         if country:
             params["country"] = country
         try:
             resp = requests.get(
-                f"{NEWS_API_BASE_URL}/latest",
+                f"{NEWS_API_BASE_URL}/search",
                 params=params,
+                headers=headers,
                 timeout=10,
             )
         except requests.RequestException:
@@ -95,22 +90,23 @@ def articles():
         if not resp.ok:
             return jsonify({"error": f"News API responded with {resp.status_code}"}), 502
 
-        for a in resp.json().get("results", []):
-            # NewsData.io gives pubDate as "YYYY-MM-DD HH:MM:SS" in UTC —
-            # normalize to ISO 8601 so the frontend's `new Date(...)` parses
-            # it consistently across browsers.
-            pub_date = a.get("pubDate")
-            published_at = f"{pub_date.replace(' ', 'T')}Z" if pub_date else None
+        for a in resp.json().get("news", [])[:ARTICLES_PER_CATEGORY]:
+            image = a.get("image")
+            if not image or image == "None":
+                image = ""
 
             collected.append(
                 {
                     "category": category,
-                    "source": a.get("source_name") or "Unknown",
+                    # Currents has no dedicated publisher field — "author" is
+                    # the closest equivalent, though it's sometimes empty or
+                    # a byline rather than an outlet name.
+                    "source": a.get("author") or "Unknown",
                     "title": a.get("title"),
                     "description": a.get("description") or "",
-                    "url": a.get("link"),
-                    "image": a.get("image_url") or "",
-                    "publishedAt": published_at,
+                    "url": a.get("url"),
+                    "image": image,
+                    "publishedAt": normalize_published(a.get("published")),
                 }
             )
 
