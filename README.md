@@ -1,5 +1,9 @@
 # Welcome to World Realtime News
 
+### A note on screenshots
+
+The 📸 markers throughout this README are placeholders — replace each one with an actual screenshot before submitting.
+
 ## Project Overview
 
 **Welcome**, and thank you for taking the time to explore my project.
