@@ -1,9 +1,5 @@
 # Welcome to World Realtime News
 
-### A note on screenshots
-
-The 📸 markers throughout this README are placeholders — replace each one with an actual screenshot before submitting.
-
 ## Project Overview
 
 **Welcome**, and thank you for taking the time to explore my project.
@@ -51,7 +47,6 @@ just an empty page it shows "No news found. Try another keyword." and a
 **Clear Filters** button that resets search, category, and the saved-view
 toggle back to their defaults in one click.
 
-<img width="1505" height="907" alt="Screenshot 2026-07-31 at 4 28 03 AM" src="https://github.com/user-attachments/assets/54e9ac1d-d4e5-4e7b-a9d3-11d239021f4d" />
 
 **Bookmarks.** Every article has a Save/Unsave button. Saved articles are
 remembered in the browser, and there's a "Saved" tab that filters the
@@ -116,8 +111,6 @@ somewhere in the title, description, or source, sorted oldest to newest.
 Switching categories or sort mode doesn't clear your search term, and
 vice versa.
 
-<img width="1510" height="912" alt="Screenshot 2026-07-31 at 4 26 36 AM" src="https://github.com/user-attachments/assets/5e8ca746-2b22-4171-ad00-f351ff55e3e0" /><img width="1498" height="906" alt="Screenshot 2026-07-31 at 4 27 35 AM" src="https://github.com/user-attachments/assets/50cab680-9e27-4230-9ad7-0916d52c8d6a" />
-
 
 The country dropdown is the odd one out. Category/search/sort all work
 by filtering the articles already sitting in the browser, so they update
@@ -137,7 +130,6 @@ request, but it also means bookmarks are local to whichever browser you
 saved them in. Clearing your browser data or opening the site in a
 different browser will start you with an empty bookmark list.
 
-<img width="1470" height="907" alt="Screenshot 2026-07-31 at 4 26 03 AM" src="https://github.com/user-attachments/assets/4a720c89-7159-4410-9330-f9354dbf5929" />
 
 
 One honest limitation worth knowing about: article ids are assigned
@@ -164,7 +156,7 @@ skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
 button that re-runs the fetch without needing a full page reload.
 
-<img width="1486" height="889" alt="Screenshot 2026-07-31 at 4 23 24 AM" src="https://github.com/user-attachments/assets/bee57841-7aa8-4e49-b095-b509ade99645" />
+
 
 
 There's also a **Simulate error** button in the UI, which deliberately
@@ -250,6 +242,8 @@ This runs the actual Flask app, which serves both the HTML/CSS/JS *and*
 the `/api/articles` endpoint. There's no static-only or mock-data mode —
 the app always fetches real, live headlines through the backend.
 
+### Here is the screenshot of what it shows on the terminal
+
 <img width="1128" height="463" alt="Screenshot 2026-07-31 at 3 34 08 AM" src="https://github.com/user-attachments/assets/8e236556-a56c-431c-85a4-9400cc66db2a" />
 
 
@@ -273,7 +267,6 @@ The page is laid out top to bottom in a few distinct sections:
    in it (the hero and latest-articles sections above are unaffected by
    category/sort/saved — they always show the newest articles overall).
   
-<img width="1509" height="911" alt="Screenshot 2026-07-31 at 4 18 24 AM" src="https://github.com/user-attachments/assets/377b6250-826c-469c-8680-65c9758911df" />
 
 ## Deployment
 
@@ -337,6 +330,7 @@ done
 
 The responses alternated between `web-01` and `web-02`, confirming that HAProxy was successfully distributing requests across both servers. I also tested the application through the browser to verify that HTTPS worked correctly, the Currents API returned live headlines, and all search, filtering, sorting, and bookmarking features behaved as expected.
 
+### Here is the screenshot of what it shows on the terminal
 <img width="845" height="357" alt="Screenshot 2026-07-31 at 3 38 56 AM" src="https://github.com/user-attachments/assets/cc556295-0c9e-46fc-b730-d764114b3202" />
 
 
