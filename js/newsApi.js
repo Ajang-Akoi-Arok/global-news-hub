@@ -1,13 +1,6 @@
-/*
- * Data access layer. Everything else in the app (app.js) calls
- * fetchArticles() and awaits a promise — it does not know or care about
- * the HTTP details underneath.
- *
- * Calls the app's own Flask backend at /api/articles (see server/app.py),
- * which calls the Currents API (https://currentsapi.services/en/docs/)
- * server-side across all seven categories and returns them pre-merged.
- * The API key never reaches the browser.
- */
+// Data access layer: app.js just awaits fetchArticles(). Calls the Flask
+// backend at /api/articles (server/app.py), which proxies Currents server-side
+// so the API key never reaches the browser.
 
 async function fetchArticles({ forceError = false, country = "" } = {}) {
   if (forceError) {

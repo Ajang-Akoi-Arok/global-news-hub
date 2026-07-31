@@ -230,8 +230,7 @@ function applyFiltersAndRender() {
   if (activeView === "saved") {
     list = list.filter((a) => bookmarks.has(a.id));
   } else {
-    // The hero and "Latest Articles" cards already show these above —
-    // avoid showing them a second time in the list below.
+    // Skip articles already shown in the hero/latest sections above.
     list = list.filter((a) => !heroArticleIds.includes(a.id) && !latestCardIds.includes(a.id));
   }
 
@@ -368,8 +367,7 @@ async function loadArticles(forceError = false) {
 
 // --- Event wiring ---
 
-// Auto-advance a carousel track every `intervalMs`, looping back to the
-// start once it reaches the end. Pauses while the pointer is over it.
+// Auto-advances a carousel track, looping at the end; pauses on hover.
 function setupCarouselAutoplay(track, getStep, intervalMs = 4000) {
   let timerId = null;
 
@@ -421,9 +419,8 @@ document.getElementById("sort-select").addEventListener("change", (e) => {
   applyFiltersAndRender();
 });
 
-// Country isn't something we can filter client-side — the backend only
-// fetches headlines for one country per request — so changing it re-fetches
-// instead of just re-rendering like the other filters do.
+// Country can't be filtered client-side (one country per fetch), so this
+// re-fetches instead of just re-rendering like the other filters.
 document.getElementById("country-select").addEventListener("change", (e) => {
   activeCountry = e.target.value;
   loadArticles();

@@ -1,12 +1,5 @@
-"""
-Flask backend for World Realtime News.
-
-Serves the static frontend (index.html, css/, js/) and one API endpoint,
-/api/articles, that fetches live headlines from the Currents News API on
-the server side — so the API key lives in an environment variable here,
-never in browser JS or network traffic. See js/newsApi.js for the
-frontend side of this.
-"""
+"""Flask backend: serves the frontend and proxies /api/articles to Currents,
+keeping the API key server-side. See js/newsApi.js for the frontend side."""
 
 import os
 import re
@@ -28,15 +21,12 @@ CATEGORIES = ["world", "business", "technology", "sports", "health", "science", 
 ARTICLES_PER_CATEGORY = 4
 REQUEST_GAP_SECONDS = 0.35  # small safety margin between requests
 
-# Currents' /search endpoint accepts a "country" filter but its docs don't
-# publish an exhaustive supported-country list the way NewsData.io's did,
-# so instead of a hardcoded whitelist this just checks the shape (a
-# 2-letter code) and lets Currents itself be the source of truth — an
-# unrecognized code just comes back with zero results rather than an error.
+# No official country-code whitelist from Currents, so just check the shape
+# and let Currents itself reject unrecognized codes (empty results, no error).
 COUNTRY_CODE_RE = re.compile(r"^[a-z]{2}$")
 
-# "YYYY-MM-DD HH:MM:SS +0000" -> "YYYY-MM-DDTHH:MM:SS+00:00" (falls back to
-# the raw string if Currents ever changes their format, rather than raising).
+# "YYYY-MM-DD HH:MM:SS +0000" -> "YYYY-MM-DDTHH:MM:SS+00:00"; falls back to
+# the raw string if Currents changes format, rather than raising.
 PUBLISHED_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}:\d{2})(?:\s*([+-]\d{2}):?(\d{2}))?$")
 
 
@@ -98,9 +88,7 @@ def articles():
             collected.append(
                 {
                     "category": category,
-                    # Currents has no dedicated publisher field — "author" is
-                    # the closest equivalent, though it's sometimes empty or
-                    # a byline rather than an outlet name.
+                    # Currents has no publisher field; "author" is closest.
                     "source": a.get("author") or "Unknown",
                     "title": a.get("title"),
                     "description": a.get("description") or "",

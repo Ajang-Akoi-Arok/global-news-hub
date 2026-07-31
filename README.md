@@ -207,10 +207,7 @@ global-news-hub_digitalaxis/
 │   └── app.py                 
 ├── requirements.txt         
 ├── .env.example               
-├── .gitignore
-└── deploy/
-    ├── nginx-global-news-hub.conf   
-    └── haproxy.cfg                   
+└── .gitignore
 ```
 
 ## Requirements
@@ -291,10 +288,36 @@ Instead of running Flask's development server, I started the backend with **Guni
 venv/bin/gunicorn -w 2 -b 127.0.0.1:5050 server.app:app --daemon
 ```
 
-I then configured **Nginx** to serve the frontend files and proxy requests made to `/api/articles` to the Gunicorn backend.
+I then configured **Nginx** to serve the frontend files and proxy requests made to `/api/articles` to the Gunicorn backend, by creating `/etc/nginx/sites-available/global-news-hub.conf` with the following config:
+
+```nginx
+server {
+    listen 80;
+    server_name _;
+
+    root /var/www/global-news-hub;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Flask backend (run via gunicorn on 127.0.0.1:5050) handles the news data.
+    location /api/ {
+        proxy_pass http://127.0.0.1:5050;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+    }
+
+    # Small health check endpoint the load balancer can poll.
+    location /health {
+        return 200 "ok\n";
+        add_header Content-Type text/plain;
+    }
+}
+```
 
 ```bash
-sudo cp deploy/nginx-global-news-hub.conf /etc/nginx/sites-available/global-news-hub.conf
 sudo ln -s /etc/nginx/sites-available/global-news-hub.conf /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
@@ -304,10 +327,38 @@ Before moving to the load balancer, I verified that each server worked correctly
 
 ### 2. Configuring the Load Balancer
 
-After confirming that both web servers were functioning correctly, I configured **HAProxy** on **Lb01** to distribute requests between Web01 and Web02 using the round-robin balancing algorithm.
+After confirming that both web servers were functioning correctly, I configured **HAProxy** on **Lb01** to distribute requests between Web01 and Web02 using the round-robin balancing algorithm, by editing `/etc/haproxy/haproxy.cfg`:
+
+```haproxy
+global
+    daemon
+    maxconn 256
+
+defaults
+    mode    http
+    timeout connect 5s
+    timeout client  30s
+    timeout server  30s
+
+frontend http_front
+    bind *:80
+    default_backend web_servers
+
+backend web_servers
+    balance roundrobin
+    option httpchk GET /health
+    server web01 <WEB01_IP>:80 check
+    server web02 <WEB02_IP>:80 check
+
+# Exposes HAProxy's stats page for verifying traffic distribution.
+listen stats
+    bind *:8404
+    stats enable
+    stats uri /stats
+    stats refresh 10s
+```
 
 ```bash
-sudo cp deploy/haproxy.cfg /etc/haproxy/haproxy.cfg
 haproxy -c -f /etc/haproxy/haproxy.cfg
 sudo systemctl reload haproxy
 ```
@@ -454,5 +505,5 @@ I appreciate the work of these communities in providing reliable tools that help
 ## Links
 
 - **Repository:** https://github.com/Ajang-Akoi-Arok/global-news-hub
-- **Live deployment (via load balancer):** _add Lb01 URL here once deployed_
-- **Demo video:** _add video link here once recorded_
+- **Live deployment (via load balancer):** https://news.ajangakoi.tech
+- **Demo video:** https://youtu.be/oIRgMP4sUEQ

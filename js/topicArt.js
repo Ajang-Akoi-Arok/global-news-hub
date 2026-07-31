@@ -1,11 +1,5 @@
-/*
- * Since articles are placeholder mock data (no real photos exist for them),
- * each category gets a small abstract illustration instead of a stock photo
- * or an emoji "sticker" — a flat, editorial-style graphic that visually
- * signals the topic without pretending to depict the specific event.
- * Swap this for real article thumbnails (a.urlToImage) once a live API
- * is wired in — see js/newsApi.js.
- */
+// Fallback illustration per category, shown when an article has no image
+// or its image fails to load. See "Image Fallback" in the README.
 
 const TOPIC_ART = {
   world: `
