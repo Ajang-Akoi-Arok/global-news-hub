@@ -133,7 +133,7 @@ request, but it also means bookmarks are local to whichever browser you
 saved them in. Clearing your browser data or opening the site in a
 different browser will start you with an empty bookmark list.
 
-<img width="1512" height="907" alt="Screenshot 2026-07-31 at 4 24 05 AM" src="https://github.com/user-attachments/assets/ea619742-e154-4403-8696-068ecdfe345a" /><img width="1470" height="907" alt="Screenshot 2026-07-31 at 4 26 03 AM" src="https://github.com/user-attachments/assets/4a720c89-7159-4410-9330-f9354dbf5929" />
+<img width="1470" height="907" alt="Screenshot 2026-07-31 at 4 26 03 AM" src="https://github.com/user-attachments/assets/4a720c89-7159-4410-9330-f9354dbf5929" />
 
 
 One honest limitation worth knowing about: article ids are assigned
@@ -160,7 +160,7 @@ skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
 button that re-runs the fetch without needing a full page reload.
 
-<img width="1510" height="850" alt="Screenshot 2026-07-31 at 4 22 08 AM" src="https://github.com/user-attachments/assets/1a4ccc8d-854a-4255-9523-25593fe0951e" /><img width="1486" height="889" alt="Screenshot 2026-07-31 at 4 23 24 AM" src="https://github.com/user-attachments/assets/bee57841-7aa8-4e49-b095-b509ade99645" />
+<img width="1486" height="889" alt="Screenshot 2026-07-31 at 4 23 24 AM" src="https://github.com/user-attachments/assets/bee57841-7aa8-4e49-b095-b509ade99645" />
 
 
 There's also a **Simulate error** button in the UI, which deliberately
@@ -246,7 +246,6 @@ This runs the actual Flask app, which serves both the HTML/CSS/JS *and*
 the `/api/articles` endpoint. There's no static-only or mock-data mode —
 the app always fetches real, live headlines through the backend.
 
-<img width="1505" height="857" alt="Screenshot 2026-07-31 at 4 21 36 AM" src="https://github.com/user-attachments/assets/9269fc3e-2475-4e5e-90b6-14c83c4ce63e" />
 <img width="1128" height="463" alt="Screenshot 2026-07-31 at 3 34 08 AM" src="https://github.com/user-attachments/assets/8e236556-a56c-431c-85a4-9400cc66db2a" />
 
 
@@ -334,7 +333,6 @@ done
 
 The responses alternated between `web-01` and `web-02`, confirming that HAProxy was successfully distributing requests across both servers. I also tested the application through the browser to verify that HTTPS worked correctly, the Currents API returned live headlines, and all search, filtering, sorting, and bookmarking features behaved as expected.
 
-<img width="1512" height="910" alt="Screenshot 2026-07-31 at 4 16 57 AM" src="https://github.com/user-attachments/assets/99d6d4ab-890c-4f51-843d-d3dbe2adce5d" />
 <img width="845" height="357" alt="Screenshot 2026-07-31 at 3 38 56 AM" src="https://github.com/user-attachments/assets/cc556295-0c9e-46fc-b730-d764114b3202" />
 
 
