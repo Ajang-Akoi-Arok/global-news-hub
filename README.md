@@ -47,8 +47,7 @@ just an empty page it shows "No news found. Try another keyword." and a
 **Clear Filters** button that resets search, category, and the saved-view
 toggle back to their defaults in one click.
 
-> 📸 **[Screenshot — Empty state UI]** Place a screenshot here showing
-> the "No news found" message and the Clear Filters button.
+<img width="1505" height="907" alt="Screenshot 2026-07-31 at 4 28 03 AM" src="https://github.com/user-attachments/assets/54e9ac1d-d4e5-4e7b-a9d3-11d239021f4d" />
 
 **Bookmarks.** Every article has a Save/Unsave button. Saved articles are
 remembered in the browser, and there's a "Saved" tab that filters the
@@ -113,9 +112,8 @@ somewhere in the title, description, or source, sorted oldest to newest.
 Switching categories or sort mode doesn't clear your search term, and
 vice versa.
 
-> 📸 **[Screenshot — Category filter + search UI]** Place a screenshot
-> here showing a category chip selected together with a search term,
-> and the narrowed-down results below.
+<img width="1510" height="912" alt="Screenshot 2026-07-31 at 4 26 36 AM" src="https://github.com/user-attachments/assets/5e8ca746-2b22-4171-ad00-f351ff55e3e0" /><img width="1498" height="906" alt="Screenshot 2026-07-31 at 4 27 35 AM" src="https://github.com/user-attachments/assets/50cab680-9e27-4230-9ad7-0916d52c8d6a" />
+
 
 The country dropdown is the odd one out. Category/search/sort all work
 by filtering the articles already sitting in the browser, so they update
@@ -135,8 +133,8 @@ request, but it also means bookmarks are local to whichever browser you
 saved them in. Clearing your browser data or opening the site in a
 different browser will start you with an empty bookmark list.
 
-> 📸 **[Screenshot — Bookmarks UI]** Place a screenshot here showing the
-> "Saved" tab with at least one bookmarked article.
+<img width="1512" height="907" alt="Screenshot 2026-07-31 at 4 24 05 AM" src="https://github.com/user-attachments/assets/ea619742-e154-4403-8696-068ecdfe345a" /><img width="1470" height="907" alt="Screenshot 2026-07-31 at 4 26 03 AM" src="https://github.com/user-attachments/assets/4a720c89-7159-4410-9330-f9354dbf5929" />
+
 
 One honest limitation worth knowing about: article ids are assigned
 fresh by the backend every time `/api/articles` is called (id `1` is
@@ -162,9 +160,8 @@ skeletons are replaced with a red error banner showing a human-readable
 message (for example, "News API responded with 403") and a **Retry**
 button that re-runs the fetch without needing a full page reload.
 
-> 📸 **[Screenshot — Error state UI]** Place a screenshot here showing
-> the red error banner and Retry button (easiest to trigger via the
-> **Simulate error** button).
+<img width="1510" height="850" alt="Screenshot 2026-07-31 at 4 22 08 AM" src="https://github.com/user-attachments/assets/1a4ccc8d-854a-4255-9523-25593fe0951e" /><img width="1486" height="889" alt="Screenshot 2026-07-31 at 4 23 24 AM" src="https://github.com/user-attachments/assets/bee57841-7aa8-4e49-b095-b509ade99645" />
+
 
 There's also a **Simulate error** button in the UI, which deliberately
 triggers the error state on demand, so error handling can be shown in a
@@ -249,8 +246,9 @@ This runs the actual Flask app, which serves both the HTML/CSS/JS *and*
 the `/api/articles` endpoint. There's no static-only or mock-data mode —
 the app always fetches real, live headlines through the backend.
 
-> 📸 **[Screenshot — CLI]** Place a screenshot here showing the terminal
-> output of `python server/app.py` starting up successfully.
+<img width="1505" height="857" alt="Screenshot 2026-07-31 at 4 21 36 AM" src="https://github.com/user-attachments/assets/9269fc3e-2475-4e5e-90b6-14c83c4ce63e" />
+<img width="1128" height="463" alt="Screenshot 2026-07-31 at 3 34 08 AM" src="https://github.com/user-attachments/assets/8e236556-a56c-431c-85a4-9400cc66db2a" />
+
 
 ## Understanding the Interface
 
@@ -271,9 +269,8 @@ The page is laid out top to bottom in a few distinct sections:
    articles / Saved toggle** sit above the list and control what's shown
    in it (the hero and latest-articles sections above are unaffected by
    category/sort/saved — they always show the newest articles overall).
-
-> 📸 **[Screenshot — Homepage UI]** Place a screenshot here showing the
-> hero carousel, Latest Articles row, and the top of the article list.
+  
+<img width="1509" height="911" alt="Screenshot 2026-07-31 at 4 18 24 AM" src="https://github.com/user-attachments/assets/377b6250-826c-469c-8680-65c9758911df" />
 
 ## Deployment
 
@@ -337,9 +334,9 @@ done
 
 The responses alternated between `web-01` and `web-02`, confirming that HAProxy was successfully distributing requests across both servers. I also tested the application through the browser to verify that HTTPS worked correctly, the Currents API returned live headlines, and all search, filtering, sorting, and bookmarking features behaved as expected.
 
-> 📸 **[Screenshot — CLI]** Place a screenshot here showing the terminal
-> output of the `curl` loop above, with responses alternating between
-> `web-01` and `web-02`.
+<img width="1512" height="910" alt="Screenshot 2026-07-31 at 4 16 57 AM" src="https://github.com/user-attachments/assets/99d6d4ab-890c-4f51-843d-d3dbe2adce5d" />
+<img width="845" height="357" alt="Screenshot 2026-07-31 at 3 38 56 AM" src="https://github.com/user-attachments/assets/cc556295-0c9e-46fc-b730-d764114b3202" />
+
 
 ## Deployment Architecture
 
